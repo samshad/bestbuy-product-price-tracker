@@ -162,5 +162,7 @@ cython_debug/
 .idea/
 
 00.py
+tmp.py
+22.py
 main.py
 

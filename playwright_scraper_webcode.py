@@ -4,7 +4,7 @@ from datetime import datetime
 from data_cleaner import DataCleaner
 
 
-class ProductScraper:
+class WebcodeScraper:
     """A class to scrape product details from Best Buy Canada using Playwright."""
 
     def __init__(self, webcode: str):
@@ -81,7 +81,7 @@ class ProductScraper:
 
 
 if __name__ == "__main__":
-    scraper = ProductScraper("17924062")
+    scraper = WebcodeScraper("17924062")
     product_details = scraper.scrape()
     print(product_details)
 

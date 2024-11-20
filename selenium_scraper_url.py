@@ -14,7 +14,7 @@ from bs4 import BeautifulSoup, Tag
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-class ProductScraper:
+class URLScraper:
     """A class to scrape product details from a Best Buy product page using Selenium and BeautifulSoup."""
 
     def __init__(self, url: str, headless: bool = True) -> None:
@@ -124,8 +124,8 @@ class ProductScraper:
 
 if __name__ == "__main__":
     # URL of the product page
-    url = 'https://www.bestbuy.ca/en-ca/product/apple-ipad-air-10-9-64gb-with-wi-fi-5th-generation-starlight/16004374'
-    scraper = ProductScraper(url)
+    url = 'https://www.bestbuy.ca/en-ca/product/hyperx-cloud-alpha-rf-wireless-gaming-headset-4p5d4aa-black/16004258'
+    scraper = URLScraper(url)
     pd = scraper.scrape()
     if pd:
         print("Scraped Product Details:", json.dumps(pd, indent=4))
