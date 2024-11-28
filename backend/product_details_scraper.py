@@ -1,13 +1,12 @@
 from playwright.sync_api import sync_playwright, Page
 from bs4 import BeautifulSoup
 from datetime import datetime
-from data_cleaner import DataCleaner
 
 
-class WebcodeScraper:
+class ProductDetailsScraper:
     """A class to scrape product details from Best Buy Canada using Playwright."""
 
-    def __init__(self, webcode: str):
+    def __init__(self, webcode: str, url: str) -> None:
         """
         Initialize the ProductScraper with the webcode for the product search.
 
@@ -15,7 +14,8 @@ class WebcodeScraper:
             webcode (str): Product web code to search on Best Buy.
         """
         self.webcode = webcode
-        self.base_url = f"https://www.bestbuy.ca/en-ca/search?search={webcode}"
+        self.url = url
+        self.search_url = f"https://www.bestbuy.ca/en-ca/search?search={webcode}"
         self.product_details = {}
 
     @staticmethod
@@ -34,13 +34,13 @@ class WebcodeScraper:
         soup = BeautifulSoup(html, 'html.parser')
 
         self.product_details = {
-            "title": self._get_text(soup.find("h1", class_="font-best-buy")),
-            "model": self._get_text(soup.find("div", {"data-automation": "MODEL_NUMBER_ID"})).replace("Model:", ""),
-            "web_code": self._get_text(soup.find("div", {"data-automation": "SKU_ID"})).replace("Web Code:", ""),
+            "title": self._get_text(soup.find("h1", class_="font-best-buy")).strip(),
+            "model": self._get_text(soup.find("div", {"data-automation": "MODEL_NUMBER_ID"})).replace("Model:", "").strip(),
+            "web_code": self._get_text(soup.find("div", {"data-automation": "SKU_ID"})).replace("Web Code:", "").strip(),
             "price": self._get_text(
-                soup.find("span", {"class": "style-module_screenReaderOnly__4QmbS style-module_large__g5jIz"})).replace("$", ""),
+                soup.find("span", {"class": "style-module_screenReaderOnly__4QmbS style-module_large__g5jIz"})).replace("$", "").strip(),
             "url": page.url,
-            "save": self._get_text(soup.find("span", {"class": "style-module_productSaving__g7g1G"})).replace("SAVE $",""),
+            "save": self._get_text(soup.find("span", {"class": "style-module_productSaving__g7g1G"})).replace("SAVE $","").strip(),
             "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         }
 
@@ -56,14 +56,19 @@ class WebcodeScraper:
             context = browser.new_context()
             page = context.new_page()
 
-            # Navigate to the product search page
-            page.goto(self.base_url)
-            page.wait_for_selector("button.onetrust-close-btn-handler")
-            page.click("button.onetrust-close-btn-handler")
+            if self.webcode:
+                # Navigate to the product search page
+                page.goto(self.search_url)
+                page.wait_for_selector("button.onetrust-close-btn-handler")
+                page.click("button.onetrust-close-btn-handler")
 
-            # Click on the first product in the search results
-            page.wait_for_selector("div.productItemName_3IZ3c")
-            page.click("xpath=//*[@id='root']/div/div[2]/div[1]/div/main/div/div[1]/div[2]/div[1]/div[2]/ul/div/div/div/a/div/div")
+                # Click on the first product in the search results
+                page.wait_for_selector("div.productItemName_3IZ3c")
+                page.click("xpath=//*[@id='root']/div/div[2]/div[1]/div/main/div/div[1]/div[2]/div[1]/div[2]/ul/div/div/div/a/div/div")
+
+            else:
+                # Navigate to the product page directly
+                page.goto(self.url)
 
             # Wait for the product page to load
             page.wait_for_selector("div.style-module_price__ql4Q1")
@@ -71,17 +76,15 @@ class WebcodeScraper:
             # Extract product details
             self._extract_product_details(page)
 
-            # Clean the data using DataCleaner
-            cleaner = DataCleaner()
-            self.product_details = cleaner.clean_product_data([self.product_details])[0]
-
             browser.close()
 
         return self.product_details
 
 
 if __name__ == "__main__":
-    scraper = WebcodeScraper("17924062")
+    #scraper = WebcodeScraper("17924062", "")
+    #scraper = WebcodeScraper("", "https://www.bestbuy.ca/en-ca/product/lg-65-4k-uhd-hdr-oled-evo-g4-webos-smart-tv-oled65g4sub-2024/17924062")
+    scraper = ProductDetailsScraper("17697551", "")
     product_details = scraper.scrape()
     print(product_details)
 

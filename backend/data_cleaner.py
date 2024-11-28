@@ -59,9 +59,9 @@ class DataCleaner:
                 "title": item.get("title", "").strip(),
                 "model": DataCleaner.clean_text(item.get("model", ""), "Model:"),
                 "web_code": DataCleaner.clean_text(item.get("web_code", ""), "Web Code:"),
-                "price": item.get("price", "").strip(),
+                "price": DataCleaner.clean_and_convert_amount(item.get("price", "").strip()),
                 "url": item.get("url", "").strip(),
-                "save": item.get("save", "").strip(),
+                "save": DataCleaner.clean_and_convert_amount(item.get("save", "").strip()),
                 "date": DataCleaner.format_date(item.get("date")),
             }
             cleaned_data.append(cleaned_item)
@@ -129,6 +129,6 @@ if __name__ == "__main__":
             "date": "2024-11-12 21:47:10"
         }
 
-    cleaner = DataCleaner()
-    cleaned_data = cleaner.clean_product_data([temp_data])
-    print("Cleaned Data:", cleaned_data)
+    # cleaner = DataCleaner()
+    # cleaned_data = cleaner.clean_product_data([temp_data])
+    # print("Cleaned Data:", cleaned_data)
