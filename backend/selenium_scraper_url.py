@@ -125,6 +125,7 @@ class URLScraper:
 if __name__ == "__main__":
     # URL of the product page
     url = 'https://www.bestbuy.ca/en-ca/product/hyperx-cloud-alpha-rf-wireless-gaming-headset-4p5d4aa-black/16004258'
+    url = 'https://www.bestbuy.ca/en-ca/product/lg-65-4k-uhd-hdr-oled-evo-g4-webos-smart-tv-oled65g4sub-2024/17924062'
     scraper = URLScraper(url)
     pd = scraper.scrape()
     if pd:

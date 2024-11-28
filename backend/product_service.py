@@ -25,13 +25,13 @@ class ProductService:
         self.mongo_client = mongo_client
         self.data_cleaner = data_cleaner
 
-    def scrape_product(self, scraper_type: str, identifier: str) -> Dict[str, Any]:
+    def scrape_product(self, webcode: str, url: str) -> Dict[str, Any]:
         """
-        Scrape product data using appropriate scraper.
+        Scrape product data using the appropriate scraper.
 
         Args:
-            scraper_type (str): Type of scraper to use
-            identifier (str): URL or web code to scrape
+            webcode (str): Web code for the product to scrape
+            url (str): URL for the product to scrape
 
         Returns:
             Dict[str, Any]: Cleaned product data
@@ -40,7 +40,7 @@ class ProductService:
             ValueError: If scraping fails
         """
         try:
-            scraper = ScraperFactory.create_scraper(scraper_type, identifier)
+            scraper = ScraperFactory.create_scraper(webcode, url)
             raw_data = scraper.scrape()
 
             if not raw_data:
@@ -56,8 +56,8 @@ class ProductService:
     def _process_product_data(self, raw_data: Dict[str, Any]) -> Dict[str, Any]:
         """Process raw product data into required format."""
         product_details = self.data_cleaner.clean_product_data([raw_data])[0]
-        product_details["price"] = self._convert_to_cents(self.data_cleaner.clean_and_convert_amount(product_details["price"]))
-        product_details["save"] = self._convert_to_cents(self.data_cleaner.clean_and_convert_amount(product_details["save"]))
+        product_details["price"] = self._convert_to_cents(product_details["price"])
+        product_details["save"] = self._convert_to_cents(product_details["save"])
         return product_details
 
     @staticmethod
