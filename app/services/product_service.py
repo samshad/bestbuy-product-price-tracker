@@ -2,11 +2,11 @@ from datetime import datetime
 from typing import Dict, Any, Tuple
 import logging
 
-from data_cleaner import DataCleaner
-from db_mongo import MongoDBClient
-from db_postgres import PostgresDBClient
-from scrapers import ScraperFactory
-from config import Config
+from app.utils.data_cleaner import DataCleaner
+from app.db.db_mongo import MongoDBClient
+from app.db.db_postgres import PostgresDBClient
+from app.scrapers.scrapers import ScraperFactory
+from app.utils.config import Config
 
 logger = logging.getLogger(__name__)
 

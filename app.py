@@ -1,12 +1,12 @@
 from flask import Flask
 from flask_cors import CORS
-from product_service import ProductService
-from api_response import APIResponse
-from config import Config
-from db_postgres import PostgresDBClient
-from db_mongo import MongoDBClient
-from data_cleaner import DataCleaner
-from routes import register_routes
+
+from app.services.product_service import ProductService
+from app.utils.config import Config
+from app.db.db_postgres import PostgresDBClient
+from app.db.db_mongo import MongoDBClient
+from app.utils.data_cleaner import DataCleaner
+from app.routes import register_routes
 
 
 def create_app() -> Flask:
