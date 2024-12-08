@@ -1,6 +1,8 @@
 from flask import request
 from typing import Dict, Any
 
+from datetime import datetime
+
 from app.services.product_service import ProductService
 from app.utils.api_response import APIResponse
 
@@ -14,7 +16,9 @@ def register_routes(app, product_service: ProductService):
     def health_check() -> Dict[str, Any]:
         """Health check endpoint."""
         logger.info("Health check endpoint called")
-        return APIResponse.build(200, {"status": "healthy"})
+        time_now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        logger.info(f"Time now: {time_now}")
+        return APIResponse.build(200, {"status": "healthy", "time": time_now})
 
     @app.route('/scrape', methods=['POST'])
     def scrape_and_store_product_details() -> Dict[str, Any]:
