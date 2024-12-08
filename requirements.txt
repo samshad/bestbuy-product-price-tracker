@@ -1,0 +1,9 @@
+beautifulsoup4
+Flask
+Flask-Cors
+playwright
+psycopg2
+pymongo
+requests
+PySocks
+python-dotenv

@@ -35,6 +35,10 @@ class DataCleaner:
         # Remove commas and any non-numeric characters except the decimal point
         cleaned_str = re.sub(r'[^\d.]', '', amount_str)
 
+        # check if the string is empty
+        if not cleaned_str:
+            cleaned_str = "0"
+
         # Convert to float and return
         try:
             return float(cleaned_str)
