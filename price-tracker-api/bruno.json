@@ -1,0 +1,18 @@
+{
+  "version": "1",
+  "name": "price-tracker-api",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git",
+    ".DS_Store",
+    ".venv",
+    ".idea",
+    ".vscode",
+    ".env"
+  ],
+  "presets": {
+    "requestType": "http",
+    "requestUrl": "http://localhost:5000"
+  }
+}

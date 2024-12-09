@@ -33,12 +33,15 @@ RUN playwright install && playwright install-deps
 # Copy the rest of the application code into the container
 COPY . .
 
+# ARG EXPOSE_PORT
 # Expose the port the app runs on
-EXPOSE 5000
+EXPOSE ${EXPOSE_PORT}
 
+# ARG HOST
+# ARG PORT
 # Set environment variables for flexibility
-ENV HOST=0.0.0.0
-ENV PORT=8050
+ENV HOST=${HOST}
+ENV PORT=${PORT}
 
 # Command to run the application
 CMD ["sh", "-c", "date && python app.py --host=${HOST} --port=${PORT}"]
