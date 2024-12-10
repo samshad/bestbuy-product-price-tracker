@@ -2,8 +2,10 @@ beautifulsoup4==4.12.3
 Flask==3.1.0
 Flask-Cors==5.0.0
 playwright==1.49.0
-# psycopg2==2.9.10
+# psycopg2==2.9.10 # Install using dockerfile because of the OS dependencies required
 pymongo==4.10.1
 requests==2.32.3
 PySocks==1.7.1
 python-dotenv==1.0.1
+pytz==2024.2
+tzdata==2024.2

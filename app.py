@@ -1,3 +1,5 @@
+import os
+from dotenv import load_dotenv
 from flask import Flask
 from flask_cors import CORS
 
@@ -7,6 +9,13 @@ from app.db.db_postgres import PostgresDBClient
 from app.db.db_mongo import MongoDBClient
 from app.utils.data_cleaner import DataCleaner
 from app.routes import register_routes
+from app.utils.my_logger import setup_logging
+
+logger = setup_logging(__name__)
+
+# Load environment variables from .env file
+if not load_dotenv():
+    logger.warning(".env file not found. Default values will be used.")
 
 
 def create_app() -> Flask:
@@ -14,20 +23,28 @@ def create_app() -> Flask:
     app = Flask(__name__)
 
     # Configure CORS
+    if not Config.ALLOWED_ORIGINS:
+        raise ValueError("Config.ALLOWED_ORIGINS is not set. Please define allowed origins in your configuration.")
     CORS(app, resources={
         r"/*": {
             "origins": Config.ALLOWED_ORIGINS,
-            "methods": ["GET", "POST", "OPTIONS"],
+            "methods": ["GET", "POST", "OPTIONS", "PUT", "DELETE"],
             "allow_headers": ["Content-Type"]
         }
     })
 
     # Initialize services
-    product_service = ProductService(
-        postgres_client=PostgresDBClient(),
-        mongo_client=MongoDBClient(),
-        data_cleaner=DataCleaner()
-    )
+    try:
+        logger.info("Initializing services...")
+        product_service = ProductService(
+            postgres_client=PostgresDBClient(),
+            mongo_client=MongoDBClient(),
+            data_cleaner=DataCleaner()
+        )
+        logger.info("Services initialized successfully.")
+    except Exception as e:
+        logger.error(f"Error initializing services: {str(e)}")
+        raise
 
     # Register routes
     register_routes(app, product_service)
@@ -36,5 +53,16 @@ def create_app() -> Flask:
 
 
 if __name__ == "__main__":
-    app = create_app()
-    app.run(host="0.0.0.0", port=5000, debug=Config.DEBUG)
+    if os.getenv("WERKZEUG_RUN_MAIN") == "true":
+        logger.info("*** Starting Flask app...")
+
+    try:
+        app = create_app()
+        host = os.getenv("HOST", "0.0.0.0")
+        port = int(os.getenv("PORT", 5000))
+        debug = os.getenv("DEBUG", "True").lower() == "true"
+
+        logger.info(f"Starting Flask app on {host}:{port} (debug={debug})")
+        app.run(host=host, port=port, debug=debug)
+    except Exception as e:
+        logger.critical(f"Failed to start Flask app: {str(e)}", exc_info=True)
