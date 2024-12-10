@@ -11,7 +11,7 @@ services:
     ports:
       - "${EXPOSE_PORT}:${EXPOSE_PORT}"
     environment:
-      - FLASK_ENV=development # Set environment variables for Flask app (development, production)
-      - TZ=America/Halifax # Set timezone for container
+      - FLASK_ENV=${FLASK_ENV} # Set environment variables for Flask app (development, production)
+      - TZ=${TIMEZONE} # Set timezone for container
     env_file:
       - .env
