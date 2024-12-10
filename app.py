@@ -53,9 +53,6 @@ def create_app() -> Flask:
 
 
 if __name__ == "__main__":
-    if os.getenv("WERKZEUG_RUN_MAIN") == "true":
-        logger.info("*** Starting Flask app...")
-
     try:
         app = create_app()
         host = os.getenv("HOST", "0.0.0.0")
