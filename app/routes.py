@@ -4,6 +4,7 @@ from datetime import datetime
 from app.services.product_service import ProductService
 from app.utils.api_response import APIResponse
 from app.utils.my_logger import setup_logging
+from app.utils.validate_input import validate_input
 
 logger = setup_logging(__name__)
 
@@ -32,14 +33,19 @@ def register_routes(app: Flask, product_service: ProductService) -> None:
             url = request.json.get("url")
 
             # Validate input
-            if not web_code and not url:
-                logger.warning("Missing 'web_code' or 'url' in request payload")
-                return APIResponse.build(400, {"error": "Either 'web_code' or 'url' is required"})
+            if not validate_input(web_code, url):
+                logger.error("Either 'webcode' or 'url' must be provided, but not both.")
+                return APIResponse.build(400, {"error": "Either 'webcode' or 'url' must be provided, but not both."})
 
             # Process product scraping
             logger.info(f"Starting product scrape: web_code={web_code}, url={url}")
-            product_details = product_service.scrape_product(web_code, url)
-            message, status_code = product_service.handle_product(product_details)
+            product_details = product_service.scrape_and_process_product(web_code, url)
+
+            # TODO: Need to implement more robust CRUD operations for the product handling
+            # message, status_code = product_service.handle_product(product_details)
+
+            # Log and return response
+            message, status_code = product_details, 200
 
             logger.info(f"Product scrape successful: {product_details}")
             return APIResponse.build(status_code, {"message": message})

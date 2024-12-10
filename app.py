@@ -4,6 +4,9 @@ from flask import Flask
 from flask_cors import CORS
 
 from app.services.product_service import ProductService
+from app.services.scraper_service import ScraperService
+from app.services.product_processor import ProductProcessor
+from app.services.database_handler import DatabaseHandler
 from app.utils.config import Config
 from app.db.db_postgres import PostgresDBClient
 from app.db.db_mongo import MongoDBClient
@@ -22,6 +25,14 @@ def create_app() -> Flask:
     """Create and configure Flask application."""
     app = Flask(__name__)
 
+    # Initialize services and utilities
+    postgres_client = PostgresDBClient()
+    mongo_client = MongoDBClient()
+    data_cleaner = DataCleaner()
+    scraper_service = ScraperService()
+    product_processor = ProductProcessor(data_cleaner)
+    database_handler = DatabaseHandler(postgres_client, mongo_client)
+
     # Configure CORS
     if not Config.ALLOWED_ORIGINS:
         raise ValueError("Config.ALLOWED_ORIGINS is not set. Please define allowed origins in your configuration.")
@@ -37,9 +48,9 @@ def create_app() -> Flask:
     try:
         logger.info("Initializing services...")
         product_service = ProductService(
-            postgres_client=PostgresDBClient(),
-            mongo_client=MongoDBClient(),
-            data_cleaner=DataCleaner()
+            scraper_service=scraper_service,
+            product_processor=product_processor,
+            database_handler=database_handler
         )
         logger.info("Services initialized successfully.")
     except Exception as e:

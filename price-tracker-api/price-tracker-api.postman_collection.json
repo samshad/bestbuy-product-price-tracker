@@ -24,45 +24,13 @@
 			"response": []
 		},
 		{
-			"name": "scrape-webcode",
-			"protocolProfileBehavior": {
-				"disableBodyPruning": true
-			},
+			"name": "scrape-product",
 			"request": {
-				"method": "GET",
+				"method": "POST",
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n        \"web_code\": \"17699676\",\r\n        \"url\": \"\"\r\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "{{baseUrl}}/scrape",
-					"host": [
-						"{{baseUrl}}"
-					],
-					"path": [
-						"scrape"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "scrape-url",
-			"protocolProfileBehavior": {
-				"disableBodyPruning": true
-			},
-			"request": {
-				"method": "GET",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\r\n        \"web_code\": \"17699676\",\r\n        \"url\": \"\"\r\n}",
+					"raw": "{\r\n        \"web_code\": \"17076520\",\r\n        \"url\": \"\"\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"

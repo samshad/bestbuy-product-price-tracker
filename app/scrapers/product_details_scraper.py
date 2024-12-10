@@ -5,6 +5,7 @@ from playwright.sync_api import sync_playwright, Page, TimeoutError as Playwrigh
 from bs4 import BeautifulSoup, Tag
 from datetime import datetime
 from app.utils.my_logger import setup_logging
+from app.utils.validate_input import validate_input
 
 logger = setup_logging(__name__)
 
@@ -22,7 +23,7 @@ class ProductDetailsScraper:
             webcode (str): Product web code to search on Best Buy.
             url (str): Direct product page URL.
         """
-        if bool(webcode) == bool(url):
+        if not validate_input(webcode, url):
             raise ValueError("Either 'webcode' or 'url' must be provided, but not both.")
 
         self.webcode = webcode
@@ -151,13 +152,10 @@ class ProductDetailsScraper:
         except Exception as e:
             logger.error(f"Unexpected error occurred: {str(e)}. Returning None.")
             return None
-        finally:
-            if browser:
-                browser.close()
 
 
 if __name__ == "__main__":
-    scraper = ProductDetailsScraper(webcode="17076520")
+    scraper = ProductDetailsScraper(webcode="17699676")
     #scraper = ProductDetailsScraper(url="https://www.bestbuy.ca/en-ca/product/170765210")
 
     product_details = scraper.scrape()
