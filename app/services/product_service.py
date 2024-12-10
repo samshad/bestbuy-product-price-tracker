@@ -1,14 +1,14 @@
 from datetime import datetime
 from typing import Dict, Any, Tuple
-import logging
 
 from app.utils.data_cleaner import DataCleaner
 from app.db.db_mongo import MongoDBClient
 from app.db.db_postgres import PostgresDBClient
 from app.scrapers.scrapers import ScraperFactory
 from app.utils.config import Config
+from app.utils.my_logger import setup_logging
 
-logger = logging.getLogger(__name__)
+logger = setup_logging(__name__)
 
 
 class ProductService:
@@ -44,7 +44,8 @@ class ProductService:
             raw_data = scraper.scrape()
 
             if not raw_data:
-                raise ValueError("Failed to scrape product data")
+                logger.error("Failed to scrape product data. Check Url or Webcode.")
+                raise ValueError("Failed to scrape product data. Check Url or Webcode.")
 
             product_details = self._process_product_data(raw_data)
             return product_details
