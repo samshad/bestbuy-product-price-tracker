@@ -27,7 +27,8 @@ class ProductDetailsScraper:
 
         self.webcode = webcode
         self.url = url
-        self.search_url = f"https://www.bestbuy.ca/en-ca/search?search={webcode}" if webcode else None
+        self.search_url = f"https://www.bestbuy.ca/en-ca/search?search={webcode}" if webcode else None # search url not allowed by robots.txt
+        self.base_url_product = "https://www.bestbuy.ca/en-ca/product/"
         self.product_details = {}
 
     @staticmethod
@@ -77,36 +78,40 @@ class ProductDetailsScraper:
                 context = browser.new_context()
                 page = context.new_page()
 
+                # Search for the product using the webcode. Not allowed by robots.txt
+                # if self.webcode:
+                #     logger.info(f"Searching for product with webcode: {self.webcode}")
+                #     try:
+                #         # Navigate to the search page
+                #         start_time = time.time()
+                #         page.goto(self.search_url)
+                #         elapsed_time = time.time() - start_time
+                #         logger.info(f"Search page loaded in {elapsed_time:.2f} seconds")
+                #         page.wait_for_selector("button.onetrust-close-btn-handler")
+                #         page.click("button.onetrust-close-btn-handler")
+                #
+                #         # Click on the first product in the search results
+                #         page.wait_for_selector("div.productItemName_3IZ3c")
+                #         page.click(
+                #             "xpath=//*[@id='root']/div/div[2]/div[1]/div/main/div/div[1]/div[2]/div[1]/div[2]/ul/div/div/div/a/div/div")
+                #     except PlaywrightTimeoutError:
+                #         logger.warning(f"No products found for webcode: {self.webcode}. Returning None.")
+                #         return None
+
+                # Load the product page directly
                 if self.webcode:
-                    logger.info(f"Searching for product with webcode: {self.webcode}")
-                    try:
-                        # Navigate to the search page
-                        start_time = time.time()
-                        page.goto(self.search_url)
-                        elapsed_time = time.time() - start_time
-                        logger.info(f"Search page loaded in {elapsed_time:.2f} seconds")
-                        page.wait_for_selector("button.onetrust-close-btn-handler")
-                        page.click("button.onetrust-close-btn-handler")
+                    self.url = f"{self.base_url_product}{self.webcode}"
 
-                        # Click on the first product in the search results
-                        page.wait_for_selector("div.productItemName_3IZ3c")
-                        page.click(
-                            "xpath=//*[@id='root']/div/div[2]/div[1]/div/main/div/div[1]/div[2]/div[1]/div[2]/ul/div/div/div/a/div/div")
-                    except PlaywrightTimeoutError:
-                        logger.warning(f"No products found for webcode: {self.webcode}. Returning None.")
-                        return None
-
-                elif self.url:
-                    logger.info(f"Scraping product details from URL: {self.url}")
-                    try:
-                        # Navigate to the product page directly
-                        start_time = time.time()
-                        page.goto(self.url)
-                        elapsed_time = time.time() - start_time
-                        logger.info(f"Product page loaded in {elapsed_time:.2f} seconds")
-                    except PlaywrightTimeoutError:
-                        logger.warning(f"Invalid URL or page could not be loaded: {self.url}. Returning None.")
-                        return None
+                logger.info(f"Scraping product details from webcode/url: {self.url}")
+                try:
+                    # Navigate to the product page directly
+                    start_time = time.time()
+                    page.goto(self.url)
+                    elapsed_time = time.time() - start_time
+                    logger.info(f"Product page loaded in {elapsed_time:.2f} seconds")
+                except PlaywrightTimeoutError:
+                    logger.warning(f"Invalid URL or page could not be loaded: {self.url}. Returning None.")
+                    return None
 
                 # Wait for the product page to load
                 try:
@@ -140,9 +145,8 @@ class ProductDetailsScraper:
 
 
 if __name__ == "__main__":
-    # scraper = ProductDetailsScraper(webcode="17076520")
-    scraper = ProductDetailsScraper(
-        url="https://www.bestbuy.ca/en-ca/product/lg-65-4k-uhd-hdr-oled-webos-evo-thinq-ai-smart-tv-oled65c3pua-2023/17076521")
+    scraper = ProductDetailsScraper(webcode="17076520")
+    #scraper = ProductDetailsScraper(url="https://www.bestbuy.ca/en-ca/product/170765210")
 
     product_details = scraper.scrape()
     if product_details is None:
