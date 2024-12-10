@@ -1,9 +1,11 @@
-from typing import Optional
 import time
+from typing import Optional
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from playwright.sync_api import sync_playwright, Page, TimeoutError as PlaywrightTimeoutError
 from bs4 import BeautifulSoup, Tag
-from datetime import datetime
+
 from app.utils.my_logger import setup_logging
 from app.utils.validate_input import validate_input
 
@@ -59,7 +61,7 @@ class ProductDetailsScraper:
             "url": page.url,
             "save": self._get_text(soup.find("span", {"class": "style-module_productSaving__g7g1G"})).replace("SAVE $",
                                                                                                               "").strip(),
-            "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "date": datetime.now(ZoneInfo("Canada/Atlantic")).isoformat(),
         }
 
     def scrape(self, timeout: int = DEFAULT_TIMEOUT) -> dict | None:

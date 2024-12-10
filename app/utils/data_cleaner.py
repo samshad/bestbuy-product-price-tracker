@@ -66,7 +66,7 @@ class DataCleaner:
                 "price": DataCleaner.clean_and_convert_amount(item.get("price", "").strip()),
                 "url": item.get("url", "").strip(),
                 "save": DataCleaner.clean_and_convert_amount(item.get("save", "").strip()),
-                "date": DataCleaner.format_date(item.get("date")),
+                "date": item.get("date"),
             }
             cleaned_data.append(cleaned_item)
         return cleaned_data

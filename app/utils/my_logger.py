@@ -33,8 +33,6 @@ class JSONFormatter(logging.Formatter):
             "pathname": record.pathname,
             "lineno": record.lineno,
             "funcName": record.funcName,
-            "process": record.process,
-            "thread": record.thread,
         }
         return json.dumps(log_record)
 

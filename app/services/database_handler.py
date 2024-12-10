@@ -3,6 +3,7 @@ from app.db.db_mongo import MongoDBClient
 from app.db.db_postgres import PostgresDBClient
 from app.utils.config import Config
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 
 class DatabaseHandler:
@@ -23,7 +24,7 @@ class DatabaseHandler:
 
     def update_existing_product(self, product_details: Dict[str, Any]) -> None:
         """Update existing product data in PostgreSQL and MongoDB."""
-        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        current_time = datetime.now(ZoneInfo("Canada/Atlantic")).isoformat()
         self.postgres_client.update_data(
             Config.TABLE_NAME,
             {
