@@ -32,9 +32,9 @@ class ProductDetailsScraper:
         self.product_details = {}
 
     @staticmethod
-    def _get_text(element: Optional[Tag]) -> str:
+    def _get_text(element: Optional[Tag], fallback: str = "") -> str:
         """Safely extract and strip text from a BeautifulSoup element."""
-        return element.get_text(strip=True) if element else ""
+        return element.get_text(strip=True) if element else fallback
 
     def _extract_product_details(self, page: Page) -> None:
         """
@@ -151,6 +151,9 @@ class ProductDetailsScraper:
         except Exception as e:
             logger.error(f"Unexpected error occurred: {str(e)}. Returning None.")
             return None
+        finally:
+            if browser:
+                browser.close()
 
 
 if __name__ == "__main__":
