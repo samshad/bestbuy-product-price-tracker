@@ -1,6 +1,7 @@
 from app.scrapers.product_details_scraper import ProductDetailsScraper
 from typing import Optional, Union
 from app.utils.my_logger import setup_logging
+from app.utils.validate_input import validate_input
 
 # Configure logging
 logger = setup_logging(__name__)
@@ -23,7 +24,7 @@ class ScraperFactory:
             None: If both webcode and URL are missing or invalid.
         """
         try:
-            if bool(webcode) == bool(url):
+            if not validate_input(webcode, url):
                 logger.error("Either 'webcode' or 'url' must be provided, but not both.")
                 return None
 
