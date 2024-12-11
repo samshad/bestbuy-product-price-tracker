@@ -1,0 +1,5 @@
+
+# Copy file from container to host
+docker cp container-id:/app/logs/filename.log D:/filename.log
+
+

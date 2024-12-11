@@ -4,7 +4,6 @@ from psycopg2.extras import RealDictCursor
 from psycopg2.errors import DatabaseError, OperationalError
 from dotenv import load_dotenv
 from typing import Optional, List, Dict, Any
-
 from app.utils.my_logger import setup_logging
 
 # Load environment variables from .env file
@@ -28,7 +27,6 @@ class PostgresDBClient:
 
             self.conn = psycopg2.connect(postgres_uri, cursor_factory=RealDictCursor)
             self.conn.autocommit = True
-            self.cursor = self.conn.cursor()
             logger.info("Connected to PostgreSQL successfully.")
         except (DatabaseError, OperationalError) as e:
             logger.critical(f"Database connection error: {str(e)}", exc_info=True)
@@ -45,9 +43,10 @@ class PostgresDBClient:
             table_name (str): The name of the table to create.
             schema (str): SQL schema defining table columns and data types.
         """
+        query = f"CREATE TABLE IF NOT EXISTS {table_name} ({schema})"
         try:
-            query = f"CREATE TABLE IF NOT EXISTS {table_name} ({schema})"
-            self.cursor.execute(query)
+            with self.conn.cursor() as cursor:
+                cursor.execute(query)
             logger.info(f"Table '{table_name}' created or already exists.")
         except psycopg2.Error as e:
             logger.error(f"Error creating table '{table_name}': {str(e)}", exc_info=True)
@@ -68,8 +67,9 @@ class PostgresDBClient:
         query = f"INSERT INTO {table_name} ({columns}) VALUES ({values}) RETURNING id"
 
         try:
-            self.cursor.execute(query, list(data.values()))
-            row_id = self.cursor.fetchone()["id"]
+            with self.conn.cursor() as cursor:
+                cursor.execute(query, list(data.values()))
+                row_id = cursor.fetchone()["id"]
             logger.info(f"Data inserted into '{table_name}' with ID: {row_id}")
             return row_id
         except psycopg2.Error as e:
@@ -96,8 +96,9 @@ class PostgresDBClient:
             values = list(conditions.values())
 
         try:
-            self.cursor.execute(query, values)
-            rows = self.cursor.fetchall()
+            with self.conn.cursor() as cursor:
+                cursor.execute(query, values)
+                rows = cursor.fetchall()
             logger.info(f"Retrieved {len(rows)} rows from '{table_name}' with conditions: {conditions}")
             return rows
         except psycopg2.Error as e:
@@ -122,8 +123,9 @@ class PostgresDBClient:
         values = list(data.values()) + list(conditions.values())
 
         try:
-            self.cursor.execute(query, values)
-            row_count = self.cursor.rowcount
+            with self.conn.cursor() as cursor:
+                cursor.execute(query, values)
+                row_count = cursor.rowcount
             logger.info(f"Updated {row_count} rows in '{table_name}' with data: {data} and conditions: {conditions}")
             return row_count
         except psycopg2.Error as e:
@@ -146,8 +148,9 @@ class PostgresDBClient:
         values = list(conditions.values())
 
         try:
-            self.cursor.execute(query, values)
-            row_count = self.cursor.rowcount
+            with self.conn.cursor() as cursor:
+                cursor.execute(query, values)
+                row_count = cursor.rowcount
             logger.info(f"Deleted {row_count} rows from '{table_name}' with conditions: {conditions}")
             return row_count
         except psycopg2.Error as e:
@@ -157,6 +160,5 @@ class PostgresDBClient:
     def close(self) -> None:
         """Close the database connection."""
         if self.conn:
-            self.cursor.close()
             self.conn.close()
             logger.info("Database connection closed.")
