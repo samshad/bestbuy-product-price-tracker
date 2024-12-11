@@ -1,7 +1,6 @@
 import os
 from typing import Optional, Dict, Any, List
 from pymongo import MongoClient
-from pymongo.collection import Collection
 from pymongo.errors import ConnectionFailure, PyMongoError
 from dotenv import load_dotenv
 from app.utils.my_logger import setup_logging
@@ -31,17 +30,21 @@ class MongoDBClient:
 
             collection_name = os.getenv("MONGO_COLLECTION_NAME")
             if not collection_name:
-                raise ValueError("Missing MONGO_COLLECTION_NAME in environment variables.")
+                raise ValueError(
+                    "Missing MONGO_COLLECTION_NAME in environment variables."
+                )
 
             # Connect to MongoDB
-            self.client = MongoClient(mongo_uri, tls=True, tlsAllowInvalidCertificates=True)
+            self.client = MongoClient(
+                mongo_uri, tls=True, tlsAllowInvalidCertificates=True
+            )
             self.db = self.client[db_name]
             self.collection = self.db[collection_name]
 
             logger.info("Connected to MongoDB successfully.")
 
         except ConnectionFailure as e:
-            logger.error("Could not connect to MongoDB:", exc_info=True)
+            logger.error(f"Could not connect to MongoDB: {str(e)}", exc_info=True)
             raise
         except ValueError as e:
             logger.error(f"Configuration error: {str(e)}")
@@ -68,10 +71,14 @@ class MongoDBClient:
                 logger.info(f"Data inserted with ID: {result.inserted_id}")
                 return str(result.inserted_id)
             else:
-                logger.warning("Insert operation returned no ID. Check data and permissions.")
+                logger.warning(
+                    "Insert operation returned no ID. Check data and permissions."
+                )
                 return None
         except PyMongoError as e:
-            logger.error("An error occurred while inserting data:", exc_info=True)
+            logger.error(
+                f"An error occurred while inserting data: {str(e)}", exc_info=True
+            )
             return None
 
     def get_data(self, query: Dict[str, Any] = {}) -> List[Dict[str, Any]]:
@@ -89,7 +96,9 @@ class MongoDBClient:
             logger.info(f"Retrieved {len(data)} documents with query: {query}")
             return data
         except PyMongoError as e:
-            logger.error("An error occurred while retrieving data:", exc_info=True)
+            logger.error(
+                f"An error occurred while retrieving data: {str(e)}", exc_info=True
+            )
             return []
 
     def update_data(self, query: Dict[str, Any], update: Dict[str, Any]) -> int:
@@ -105,10 +114,14 @@ class MongoDBClient:
         """
         try:
             result = self.collection.update_many(query, {"$set": update})
-            logger.info(f"Modified {result.modified_count} documents with query: {query} and update: {update}")
+            logger.info(
+                f"Modified {result.modified_count} documents with query: {query} and update: {update}"
+            )
             return result.modified_count
         except PyMongoError as e:
-            logger.error("An error occurred while updating data:", exc_info=True)
+            logger.error(
+                f"An error occurred while updating data: {str(e)}", exc_info=True
+            )
             return 0
 
     def delete_data(self, query: Dict[str, Any]) -> int:
@@ -126,5 +139,7 @@ class MongoDBClient:
             logger.info(f"Deleted {result.deleted_count} documents with query: {query}")
             return result.deleted_count
         except PyMongoError as e:
-            logger.error("An error occurred while deleting data:", exc_info=True)
+            logger.error(
+                f"An error occurred while deleting data: {str(e)}", exc_info=True
+            )
             return 0

@@ -16,7 +16,7 @@ class ProductService:
         self,
         scraper_service: ScraperService,
         product_processor: ProductProcessor,
-        database_handler: DatabaseHandler
+        database_handler: DatabaseHandler,
     ):
         self.scraper_service = scraper_service
         self.product_processor = product_processor
@@ -48,7 +48,9 @@ class ProductService:
         Returns:
             Tuple[str, int]: A message and status code.
         """
-        existing_product = self.database_handler.get_product(web_code=product_details["web_code"])
+        existing_product = self.database_handler.get_product(
+            web_code=product_details["web_code"]
+        )
 
         if existing_product:
             return self._handle_existing_product(product_details, existing_product[0])
@@ -56,8 +58,9 @@ class ProductService:
         self.database_handler.store_new_product(product_details)
         return "Product data added to PostgreSQL and MongoDB.", 201
 
-    def _handle_existing_product(self, product_details: Dict[str, Any],
-                                 existing_product: Dict[str, Any]) -> Tuple[str, int]:
+    def _handle_existing_product(
+        self, product_details: Dict[str, Any], existing_product: Dict[str, Any]
+    ) -> Tuple[str, int]:
         """
         Handle logic for existing products.
 
@@ -108,7 +111,9 @@ class ProductService:
             logger.error(f"Error fetching product prices: {str(e)}")
             return []
 
-    def get_product(self, product_id: Optional[int] = None, web_code: Optional[str] = None) -> Dict[str, Any]:
+    def get_product(
+        self, product_id: Optional[int] = None, web_code: Optional[str] = None
+    ) -> Dict[str, Any]:
         """
         Retrieve product by id or web code from the database.
 
@@ -120,8 +125,12 @@ class ProductService:
             Dict[str, Any]: A dict of product record.
         """
         # Validate input to ensure either 'web_code' or 'product_id' is provided, but not both.
-        if not validate_input_product_id_web_code(product_id=product_id, web_code=web_code):
-            logger.error("Either 'product_id' or 'web_code' must be provided, but not both.")
+        if not validate_input_product_id_web_code(
+            product_id=product_id, web_code=web_code
+        ):
+            logger.error(
+                "Either 'product_id' or 'web_code' must be provided, but not both."
+            )
             return {}
 
         try:

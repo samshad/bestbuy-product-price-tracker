@@ -15,10 +15,10 @@ class ProductService:
     """Service layer for product operations."""
 
     def __init__(
-            self,
-            postgres_client: PostgresDBClient,
-            mongo_client: MongoDBClient,
-            data_cleaner: DataCleaner
+        self,
+        postgres_client: PostgresDBClient,
+        mongo_client: MongoDBClient,
+        data_cleaner: DataCleaner,
     ):
         """Initialize service with required dependencies."""
         self.postgres_client = postgres_client
@@ -77,8 +77,7 @@ class ProductService:
             Tuple[str, int]: Message and status code
         """
         existing_product = self.postgres_client.get_data(
-            Config.TABLE_NAME,
-            {"web_code": product_details["web_code"]}
+            Config.TABLE_NAME, {"web_code": product_details["web_code"]}
         )
 
         if existing_product:
@@ -86,9 +85,7 @@ class ProductService:
         return self._handle_new_product(product_details)
 
     def _handle_existing_product(
-            self,
-            product_details: Dict[str, Any],
-            existing_product: Dict[str, Any]
+        self, product_details: Dict[str, Any], existing_product: Dict[str, Any]
     ) -> Tuple[str, int]:
         """Handle logic for existing products."""
         current_date = datetime.now().date()
@@ -111,11 +108,8 @@ class ProductService:
 
         self.postgres_client.update_data(
             Config.TABLE_NAME,
-            {
-                "price": product_details["price"],
-                "date": current_time
-            },
-            {"web_code": product_details["web_code"]}
+            {"price": product_details["price"], "date": current_time},
+            {"web_code": product_details["web_code"]},
         )
 
         self._store_mongo_data(product_details)
@@ -127,9 +121,11 @@ class ProductService:
 
     def _store_mongo_data(self, product_details: Dict[str, Any]) -> None:
         """Store product data in MongoDB."""
-        self.mongo_client.insert_data({
-            "web_code": product_details["web_code"],
-            "price": product_details["price"],
-            "save": product_details["save"],
-            "date": product_details["date"]
-        })
+        self.mongo_client.insert_data(
+            {
+                "web_code": product_details["web_code"],
+                "price": product_details["price"],
+                "save": product_details["save"],
+                "date": product_details["date"],
+            }
+        )

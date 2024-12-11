@@ -1,5 +1,6 @@
 import time
 
+
 def retry_with_backoff(func, retries=3, initial_delay=5, backoff_factor=2):
     """
     Retry a function with exponential backoff.
@@ -23,4 +24,3 @@ def retry_with_backoff(func, retries=3, initial_delay=5, backoff_factor=2):
                 delay *= backoff_factor
             else:
                 raise e
-

@@ -44,11 +44,8 @@ class DatabaseHandler:
         current_time = datetime.now(ZoneInfo("Canada/Atlantic")).isoformat()
         self.postgres_client.update_data(
             Config.TABLE_NAME,
-            {
-                "price": product_details["price"],
-                "date": current_time
-            },
-            {"web_code": product_details["web_code"]}
+            {"price": product_details["price"], "date": current_time},
+            {"web_code": product_details["web_code"]},
         )
         self._store_in_mongo(product_details)
 
@@ -62,12 +59,14 @@ class DatabaseHandler:
         Returns:
             None
         """
-        self.mongo_client.insert_data({
-            "web_code": product_details["web_code"],
-            "price": product_details["price"],
-            "save": product_details["save"],
-            "date": product_details["date"]
-        })
+        self.mongo_client.insert_data(
+            {
+                "web_code": product_details["web_code"],
+                "price": product_details["price"],
+                "save": product_details["save"],
+                "date": product_details["date"],
+            }
+        )
 
     def get_all_products(self) -> List[Dict[str, Any]]:
         """
@@ -92,7 +91,9 @@ class DatabaseHandler:
         documents = self.mongo_client.get_data(query)
         return serialize_mongo_data(documents)
 
-    def get_product(self, product_id: Optional[int] = None, web_code: Optional[str] = None) -> List[Dict[str, Any]]:
+    def get_product(
+        self, product_id: Optional[int] = None, web_code: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
         """
         Retrieve a product by either ID or web code.
 
@@ -106,8 +107,12 @@ class DatabaseHandler:
         Raises:
             ValueError: If neither 'product_id' nor 'web_code' is provided.
         """
-        if not validate_input_product_id_web_code(product_id=product_id, web_code=web_code):
-            logger.error("Either 'product_id' or 'web_code' must be provided, but not both.")
+        if not validate_input_product_id_web_code(
+            product_id=product_id, web_code=web_code
+        ):
+            logger.error(
+                "Either 'product_id' or 'web_code' must be provided, but not both."
+            )
             return []
 
         query_filter = {"id": product_id} if product_id else {"web_code": web_code}

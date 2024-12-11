@@ -28,7 +28,9 @@ class ScraperService:
             product_details = scraper.scrape()
 
             if not product_details:
-                logger.warning(f"Failed to scrape product data. Webcode: {webcode}, URL: {url}")
+                logger.warning(
+                    f"Failed to scrape product data. Webcode: {webcode}, URL: {url}"
+                )
                 return None
 
             logger.info(f"Scraped product data: {product_details}")

@@ -32,16 +32,34 @@ class ProductDetailsScraper:
             page (Page): The Playwright page object after navigation.
         """
         html = page.content()
-        soup = BeautifulSoup(html, 'html.parser')
+        soup = BeautifulSoup(html, "html.parser")
 
         self.product_details = {
             "title": self._get_text(soup.find("h1", class_="font-best-buy")).strip(),
-            "model": self._get_text(soup.find("div", {"data-automation": "MODEL_NUMBER_ID"})).replace("Model:", "").strip(),
-            "web_code": self._get_text(soup.find("div", {"data-automation": "SKU_ID"})).replace("Web Code:", "").strip(),
+            "model": self._get_text(
+                soup.find("div", {"data-automation": "MODEL_NUMBER_ID"})
+            )
+            .replace("Model:", "")
+            .strip(),
+            "web_code": self._get_text(soup.find("div", {"data-automation": "SKU_ID"}))
+            .replace("Web Code:", "")
+            .strip(),
             "price": self._get_text(
-                soup.find("span", {"class": "style-module_screenReaderOnly__4QmbS style-module_large__g5jIz"})).replace("$", "").strip(),
+                soup.find(
+                    "span",
+                    {
+                        "class": "style-module_screenReaderOnly__4QmbS style-module_large__g5jIz"
+                    },
+                )
+            )
+            .replace("$", "")
+            .strip(),
             "url": page.url,
-            "save": self._get_text(soup.find("span", {"class": "style-module_productSaving__g7g1G"})).replace("SAVE $","").strip(),
+            "save": self._get_text(
+                soup.find("span", {"class": "style-module_productSaving__g7g1G"})
+            )
+            .replace("SAVE $", "")
+            .strip(),
             "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         }
 
@@ -71,7 +89,9 @@ class ProductDetailsScraper:
 
                 # Click on the first product in the search results
                 page.wait_for_selector("div.productItemName_3IZ3c")
-                page.click("xpath=//*[@id='root']/div/div[2]/div[1]/div/main/div/div[1]/div[2]/div[1]/div[2]/ul/div/div/div/a/div/div")
+                page.click(
+                    "xpath=//*[@id='root']/div/div[2]/div[1]/div/main/div/div[1]/div[2]/div[1]/div[2]/ul/div/div/div/a/div/div"
+                )
 
             else:
                 # Navigate to the product page directly
@@ -96,9 +116,9 @@ class ProductDetailsScraper:
 
 if __name__ == "__main__":
     scraper = ProductDetailsScraper("17076520", "")
-    #scraper = ProductDetailsScraper("", "https://www.bestbuy.ca/en-ca/product/lg-83-4k-uhd-hdr-oled-webos-evo-thinq-ai-smart-tv-oled83c3pua-2023/17076520")
+    # scraper = ProductDetailsScraper("", "https://www.bestbuy.ca/en-ca/product/lg-83-4k-uhd-hdr-oled-webos-evo-thinq-ai-smart-tv-oled83c3pua-2023/17076520")
     product_details = scraper.scrape()
     print(product_details)
 
-    #print(scrape("17924062"))
-    #print(scrape("17924066"))
+    # print(scrape("17924062"))
+    # print(scrape("17924066"))

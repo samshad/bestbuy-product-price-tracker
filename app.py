@@ -35,14 +35,19 @@ def create_app() -> Flask:
 
     # Configure CORS
     if not Config.ALLOWED_ORIGINS:
-        raise ValueError("Config.ALLOWED_ORIGINS is not set. Please define allowed origins in your configuration.")
-    CORS(app, resources={
-        r"/*": {
-            "origins": Config.ALLOWED_ORIGINS,
-            "methods": ["GET", "POST", "OPTIONS", "PUT", "DELETE"],
-            "allow_headers": ["Content-Type"]
-        }
-    })
+        raise ValueError(
+            "Config.ALLOWED_ORIGINS is not set. Please define allowed origins in your configuration."
+        )
+    CORS(
+        app,
+        resources={
+            r"/*": {
+                "origins": Config.ALLOWED_ORIGINS,
+                "methods": ["GET", "POST", "OPTIONS", "PUT", "DELETE"],
+                "allow_headers": ["Content-Type"],
+            }
+        },
+    )
 
     # Initialize services
     try:
@@ -50,7 +55,7 @@ def create_app() -> Flask:
         product_service = ProductService(
             scraper_service=scraper_service,
             product_processor=product_processor,
-            database_handler=database_handler
+            database_handler=database_handler,
         )
         logger.info("Services initialized successfully.")
     except Exception as e:

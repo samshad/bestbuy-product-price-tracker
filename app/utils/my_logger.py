@@ -25,7 +25,9 @@ class JSONFormatter(logging.Formatter):
     """
 
     def format(self, record):
-        local_current_time = datetime.now(ZoneInfo('Canada/Atlantic')) # Host's local time
+        local_current_time = datetime.now(
+            ZoneInfo("Canada/Atlantic")
+        )  # Host's local time
         log_record = {
             "timestamp": local_current_time.isoformat(),
             "level": record.levelname,
@@ -58,7 +60,9 @@ def setup_logging(name: str) -> logging.Logger:
         return logger
 
     # File handler for daily log files
-    log_file_name = os.path.join(log_directory, f"{datetime.now().strftime('%d-%m-%Y')}.log")
+    log_file_name = os.path.join(
+        log_directory, f"{datetime.now().strftime('%d-%m-%Y')}.log"
+    )
     file_handler = TimedRotatingFileHandler(
         log_file_name, when="midnight", interval=1, encoding="utf-8"
     )

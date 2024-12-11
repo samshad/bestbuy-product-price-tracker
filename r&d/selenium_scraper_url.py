@@ -14,6 +14,7 @@ from bs4 import BeautifulSoup, Tag
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 class URLScraper:
     """A class to scrape product details from a Best Buy product page using Selenium and BeautifulSoup."""
 
@@ -53,7 +54,9 @@ class URLScraper:
 
             # Click close button for privacy pop-up if it exists
             try:
-                close_button = self.driver.find_element(By.CLASS_NAME, "onetrust-close-btn-handler")
+                close_button = self.driver.find_element(
+                    By.CLASS_NAME, "onetrust-close-btn-handler"
+                )
                 close_button.click()
                 logger.info("Closed privacy pop-up")
             except Exception:
@@ -72,14 +75,27 @@ class URLScraper:
             Optional[Dict[str, Any]]: Dictionary of product details or None if parsing fails.
         """
         try:
-            soup = BeautifulSoup(self.driver.page_source, 'html.parser')
+            soup = BeautifulSoup(self.driver.page_source, "html.parser")
             product_details = {
                 "title": self._get_text(soup.find("h1", class_="font-best-buy")),
-                "model": self._get_text(soup.find("div", {"data-automation": "MODEL_NUMBER_ID"})).replace("Model:", ""),
-                "web_code": self._get_text(soup.find("div", {"data-automation": "SKU_ID"})).replace("Web Code:", ""),
-                "price": self._get_text(soup.find("span", {"class": "style-module_screenReaderOnly__4QmbS style-module_large__g5jIz"})).replace("$", ""),
+                "model": self._get_text(
+                    soup.find("div", {"data-automation": "MODEL_NUMBER_ID"})
+                ).replace("Model:", ""),
+                "web_code": self._get_text(
+                    soup.find("div", {"data-automation": "SKU_ID"})
+                ).replace("Web Code:", ""),
+                "price": self._get_text(
+                    soup.find(
+                        "span",
+                        {
+                            "class": "style-module_screenReaderOnly__4QmbS style-module_large__g5jIz"
+                        },
+                    )
+                ).replace("$", ""),
                 "url": self.url,
-                "save": self._get_text(soup.find("span", {"class": "style-module_productSaving__g7g1G"})).replace("SAVE $", ""),
+                "save": self._get_text(
+                    soup.find("span", {"class": "style-module_productSaving__g7g1G"})
+                ).replace("SAVE $", ""),
                 "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             }
             logger.info("Product details extracted successfully")
@@ -124,8 +140,8 @@ class URLScraper:
 
 if __name__ == "__main__":
     # URL of the product page
-    url = 'https://www.bestbuy.ca/en-ca/product/hyperx-cloud-alpha-rf-wireless-gaming-headset-4p5d4aa-black/16004258'
-    url = 'https://www.bestbuy.ca/en-ca/product/lg-65-4k-uhd-hdr-oled-evo-g4-webos-smart-tv-oled65g4sub-2024/17924062'
+    url = "https://www.bestbuy.ca/en-ca/product/hyperx-cloud-alpha-rf-wireless-gaming-headset-4p5d4aa-black/16004258"
+    url = "https://www.bestbuy.ca/en-ca/product/lg-65-4k-uhd-hdr-oled-evo-g4-webos-smart-tv-oled65g4sub-2024/17924062"
     scraper = URLScraper(url)
     pd = scraper.scrape()
     if pd:

@@ -11,7 +11,9 @@ class ScraperFactory:
     """Factory class for creating scrapers."""
 
     @staticmethod
-    def create_scraper(webcode: Optional[str] = None, url: Optional[str] = None) -> Union[ProductDetailsScraper, None]:
+    def create_scraper(
+        webcode: Optional[str] = None, url: Optional[str] = None
+    ) -> Union[ProductDetailsScraper, None]:
         """
         Create and return an appropriate scraper instance.
 
@@ -25,12 +27,16 @@ class ScraperFactory:
         """
         try:
             if not validate_input_web_code_url(webcode, url):
-                logger.error("Either 'webcode' or 'url' must be provided, but not both.")
+                logger.error(
+                    "Either 'webcode' or 'url' must be provided, but not both."
+                )
                 return None
 
             logger.info(f"Creating scraper with webcode={webcode}, url={url}")
             return ProductDetailsScraper(webcode=webcode, url=url)
 
         except Exception as e:
-            logger.error(f"An error occurred while creating the scraper: {str(e)}", exc_info=True)
+            logger.error(
+                f"An error occurred while creating the scraper: {str(e)}", exc_info=True
+            )
             return None

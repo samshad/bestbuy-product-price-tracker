@@ -33,7 +33,7 @@ class DataCleaner:
             float: The cleaned amount as a floating-point number.
         """
         # Remove commas and any non-numeric characters except the decimal point
-        cleaned_str = re.sub(r'[^\d.]', '', amount_str)
+        cleaned_str = re.sub(r"[^\d.]", "", amount_str)
 
         # check if the string is empty
         if not cleaned_str:
@@ -62,10 +62,16 @@ class DataCleaner:
             cleaned_item = {
                 "title": item.get("title", "").strip(),
                 "model": DataCleaner.clean_text(item.get("model", ""), "Model:"),
-                "web_code": DataCleaner.clean_text(item.get("web_code", ""), "Web Code:"),
-                "price": DataCleaner.clean_and_convert_amount(item.get("price", "").strip()),
+                "web_code": DataCleaner.clean_text(
+                    item.get("web_code", ""), "Web Code:"
+                ),
+                "price": DataCleaner.clean_and_convert_amount(
+                    item.get("price", "").strip()
+                ),
                 "url": item.get("url", "").strip(),
-                "save": DataCleaner.clean_and_convert_amount(item.get("save", "").strip()),
+                "save": DataCleaner.clean_and_convert_amount(
+                    item.get("save", "").strip()
+                ),
                 "date": item.get("date"),
             }
             cleaned_data.append(cleaned_item)
@@ -73,8 +79,8 @@ class DataCleaner:
 
     @staticmethod
     def remove_objectid(data):
-        if '_id' in data:
-            del data['_id']
+        if "_id" in data:
+            del data["_id"]
         return data
 
     @staticmethod
@@ -99,14 +105,14 @@ if __name__ == "__main__":
     raw_data = [
         {
             "_id": "6734050a42467f925ca4beb9",
-            "title": "Apple iPad Air 10.9\" 64GB with Wi-Fi (5th Generation) - Starlight",
+            "title": 'Apple iPad Air 10.9" 64GB with Wi-Fi (5th Generation) - Starlight',
             "brand": "Apple",
             "model": "Model:MM9F3VC/A",
             "web_code": "Web Code:16004374",
             "rating": "4.2",
             "review_count": "(5 Reviews)",
             "price": "$599.99",
-            "date": "2024-11-12 21:46:50"
+            "date": "2024-11-12 21:46:50",
         },
         {
             "_id": "6734051e42467f925ca4bebb",
@@ -117,21 +123,21 @@ if __name__ == "__main__":
             "rating": "4.8",
             "review_count": "(682 Reviews)",
             "price": "$109.99",
-            "date": "2024-11-12 21:47:10"
-        }
+            "date": "2024-11-12 21:47:10",
+        },
     ]
 
     temp_data = {
-            "_id": "6734051e42467f925ca4bebb",
-            "title": "Instant Pot Duo V5 7-in-1 Pressure Cooker - 6QT",
-            "brand": "",
-            "model": "Model:112-0170-02",
-            "web_code": "Web Code:16374908",
-            "rating": "4.8",
-            "review_count": "(682 Reviews)",
-            "price": "$109.99",
-            "date": "2024-11-12 21:47:10"
-        }
+        "_id": "6734051e42467f925ca4bebb",
+        "title": "Instant Pot Duo V5 7-in-1 Pressure Cooker - 6QT",
+        "brand": "",
+        "model": "Model:112-0170-02",
+        "web_code": "Web Code:16374908",
+        "rating": "4.8",
+        "review_count": "(682 Reviews)",
+        "price": "$109.99",
+        "date": "2024-11-12 21:47:10",
+    }
 
     # cleaner = DataCleaner()
     # cleaned_data = cleaner.clean_product_data([temp_data])

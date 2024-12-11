@@ -7,13 +7,16 @@ from typing import Optional, List, Dict, Any
 # Load environment variables from .env file
 load_dotenv()
 
+
 class PostgresDBClient:
     """A PostgreSQL database client to handle connection and CRUD operations."""
 
     def __init__(self) -> None:
         """Initialize the PostgreSQL database connection using the connection URL from environment variables."""
         try:
-            self.conn = psycopg2.connect(os.getenv("POSTGRES_URI"), cursor_factory=RealDictCursor)
+            self.conn = psycopg2.connect(
+                os.getenv("POSTGRES_URI"), cursor_factory=RealDictCursor
+            )
             self.conn.autocommit = True
             self.cursor = self.conn.cursor()
             print("Connected to PostgreSQL successfully.")
@@ -47,8 +50,8 @@ class PostgresDBClient:
         Returns:
             Optional[int]: The ID of the inserted row or None if insertion failed.
         """
-        columns = ', '.join(data.keys())
-        values = ', '.join(['%s'] * len(data))
+        columns = ", ".join(data.keys())
+        values = ", ".join(["%s"] * len(data))
         query = f"INSERT INTO {table_name} ({columns}) VALUES ({values}) RETURNING id"
 
         try:
@@ -60,7 +63,9 @@ class PostgresDBClient:
             print(f"Error inserting data: {e}")
             return None
 
-    def get_data(self, table_name: str, conditions: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+    def get_data(
+        self, table_name: str, conditions: Optional[Dict[str, Any]] = None
+    ) -> List[Dict[str, Any]]:
         """
         Retrieve rows from the specified table with optional conditions.
 
@@ -73,7 +78,7 @@ class PostgresDBClient:
         """
         query = f"SELECT * FROM {table_name}"
         if conditions:
-            where_clause = ' AND '.join([f"{col} = %s" for col in conditions.keys()])
+            where_clause = " AND ".join([f"{col} = %s" for col in conditions.keys()])
             query += f" WHERE {where_clause}"
             values = list(conditions.values())
         else:
@@ -88,7 +93,9 @@ class PostgresDBClient:
             print(f"Error retrieving data: {e}")
             return []
 
-    def update_data(self, table_name: str, data: Dict[str, Any], conditions: Dict[str, Any]) -> int:
+    def update_data(
+        self, table_name: str, data: Dict[str, Any], conditions: Dict[str, Any]
+    ) -> int:
         """
         Update rows in the specified table based on conditions.
 
@@ -100,8 +107,8 @@ class PostgresDBClient:
         Returns:
             int: The number of rows updated.
         """
-        set_clause = ', '.join([f"{col} = %s" for col in data.keys()])
-        where_clause = ' AND '.join([f"{col} = %s" for col in conditions.keys()])
+        set_clause = ", ".join([f"{col} = %s" for col in data.keys()])
+        where_clause = " AND ".join([f"{col} = %s" for col in conditions.keys()])
         query = f"UPDATE {table_name} SET {set_clause} WHERE {where_clause}"
         values = list(data.values()) + list(conditions.values())
 
@@ -125,7 +132,7 @@ class PostgresDBClient:
         Returns:
             int: The number of rows deleted.
         """
-        where_clause = ' AND '.join([f"{col} = %s" for col in conditions.keys()])
+        where_clause = " AND ".join([f"{col} = %s" for col in conditions.keys()])
         query = f"DELETE FROM {table_name} WHERE {where_clause}"
         values = list(conditions.values())
 

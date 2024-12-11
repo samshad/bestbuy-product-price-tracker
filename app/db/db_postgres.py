@@ -49,7 +49,9 @@ class PostgresDBClient:
                 cursor.execute(query)
             logger.info(f"Table '{table_name}' created or already exists.")
         except psycopg2.Error as e:
-            logger.error(f"Error creating table '{table_name}': {str(e)}", exc_info=True)
+            logger.error(
+                f"Error creating table '{table_name}': {str(e)}", exc_info=True
+            )
 
     def insert_data(self, table_name: str, data: Dict[str, Any]) -> Optional[int]:
         """
@@ -62,8 +64,8 @@ class PostgresDBClient:
         Returns:
             Optional[int]: The ID of the inserted row or None if insertion failed.
         """
-        columns = ', '.join(data.keys())
-        values = ', '.join(['%s'] * len(data))
+        columns = ", ".join(data.keys())
+        values = ", ".join(["%s"] * len(data))
         query = f"INSERT INTO {table_name} ({columns}) VALUES ({values}) RETURNING id"
 
         try:
@@ -73,10 +75,14 @@ class PostgresDBClient:
             logger.info(f"Data inserted into '{table_name}' with ID: {row_id}")
             return row_id
         except psycopg2.Error as e:
-            logger.error(f"Error inserting data into '{table_name}': {str(e)}", exc_info=True)
+            logger.error(
+                f"Error inserting data into '{table_name}': {str(e)}", exc_info=True
+            )
             return None
 
-    def get_data(self, table_name: str, conditions: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+    def get_data(
+        self, table_name: str, conditions: Optional[Dict[str, Any]] = None
+    ) -> List[Dict[str, Any]]:
         """
         Retrieve rows from the specified table with optional conditions.
 
@@ -91,7 +97,7 @@ class PostgresDBClient:
         values = []
 
         if conditions:
-            where_clause = ' AND '.join([f"{col} = %s" for col in conditions.keys()])
+            where_clause = " AND ".join([f"{col} = %s" for col in conditions.keys()])
             query += f" WHERE {where_clause}"
             values = list(conditions.values())
 
@@ -99,13 +105,19 @@ class PostgresDBClient:
             with self.conn.cursor() as cursor:
                 cursor.execute(query, values)
                 rows = cursor.fetchall()
-            logger.info(f"Retrieved {len(rows)} rows from '{table_name}' with conditions: {conditions}")
+            logger.info(
+                f"Retrieved {len(rows)} rows from '{table_name}' with conditions: {conditions}"
+            )
             return rows
         except psycopg2.Error as e:
-            logger.error(f"Error retrieving data from '{table_name}': {str(e)}", exc_info=True)
+            logger.error(
+                f"Error retrieving data from '{table_name}': {str(e)}", exc_info=True
+            )
             return []
 
-    def update_data(self, table_name: str, data: Dict[str, Any], conditions: Dict[str, Any]) -> int:
+    def update_data(
+        self, table_name: str, data: Dict[str, Any], conditions: Dict[str, Any]
+    ) -> int:
         """
         Update rows in the specified table based on conditions.
 
@@ -117,8 +129,8 @@ class PostgresDBClient:
         Returns:
             int: The number of rows updated.
         """
-        set_clause = ', '.join([f"{col} = %s" for col in data.keys()])
-        where_clause = ' AND '.join([f"{col} = %s" for col in conditions.keys()])
+        set_clause = ", ".join([f"{col} = %s" for col in data.keys()])
+        where_clause = " AND ".join([f"{col} = %s" for col in conditions.keys()])
         query = f"UPDATE {table_name} SET {set_clause} WHERE {where_clause}"
         values = list(data.values()) + list(conditions.values())
 
@@ -126,10 +138,14 @@ class PostgresDBClient:
             with self.conn.cursor() as cursor:
                 cursor.execute(query, values)
                 row_count = cursor.rowcount
-            logger.info(f"Updated {row_count} rows in '{table_name}' with data: {data} and conditions: {conditions}")
+            logger.info(
+                f"Updated {row_count} rows in '{table_name}' with data: {data} and conditions: {conditions}"
+            )
             return row_count
         except psycopg2.Error as e:
-            logger.error(f"Error updating data in '{table_name}': {str(e)}", exc_info=True)
+            logger.error(
+                f"Error updating data in '{table_name}': {str(e)}", exc_info=True
+            )
             return 0
 
     def delete_data(self, table_name: str, conditions: Dict[str, Any]) -> int:
@@ -143,7 +159,7 @@ class PostgresDBClient:
         Returns:
             int: The number of rows deleted.
         """
-        where_clause = ' AND '.join([f"{col} = %s" for col in conditions.keys()])
+        where_clause = " AND ".join([f"{col} = %s" for col in conditions.keys()])
         query = f"DELETE FROM {table_name} WHERE {where_clause}"
         values = list(conditions.values())
 
@@ -151,10 +167,14 @@ class PostgresDBClient:
             with self.conn.cursor() as cursor:
                 cursor.execute(query, values)
                 row_count = cursor.rowcount
-            logger.info(f"Deleted {row_count} rows from '{table_name}' with conditions: {conditions}")
+            logger.info(
+                f"Deleted {row_count} rows from '{table_name}' with conditions: {conditions}"
+            )
             return row_count
         except psycopg2.Error as e:
-            logger.error(f"Error deleting data from '{table_name}': {str(e)}", exc_info=True)
+            logger.error(
+                f"Error deleting data from '{table_name}': {str(e)}", exc_info=True
+            )
             return 0
 
     def close(self) -> None:
