@@ -117,7 +117,7 @@ Ensure you have the following installed:
 ```json
 {
   "message": "Product data added to PostgreSQL and MongoDB.",
-  "product_details": { ... }
+  "product_details": [ "..." ]
 }
 ```
 
@@ -128,7 +128,7 @@ Ensure you have the following installed:
 **Response Example:**
 ```json
 {
-  "products": [ ... ]
+  "products": [ "..." ]
 }
 ```
 
@@ -149,7 +149,7 @@ Ensure you have the following installed:
 **Response Example:**
 ```json
 {
-  "prices": [ ... ]
+  "prices": [ "..." ]
 }
 ```
 
@@ -166,7 +166,7 @@ Ensure you have the following installed:
 **Response Example:**
 ```json
 {
-  "product": { ... }
+  "product": { "...": "..." }
 }
 ```
 
