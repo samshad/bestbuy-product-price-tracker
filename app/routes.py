@@ -62,3 +62,26 @@ def register_routes(app: Flask, product_service: ProductService) -> None:
         except Exception as e:
             logger.exception(f"Unexpected error occurred: {str(e)}")  # Logs full stack trace
             return APIResponse.build(500, {"error": "An unexpected error occurred"})
+
+    @app.route('/products', methods=['GET'])
+    def get_all_products() -> Response:
+        """
+        Endpoint to fetch all product details available in the database.
+
+        Returns:
+            A JSON response containing all product details or an error message.
+        """
+        try:
+            logger.info("Fetching all product details from the database.")
+            all_products = product_service.get_all_products()
+
+            if not all_products:
+                logger.info("No product details found.")
+                return APIResponse.build(404, {"message": "No products available."})
+
+            logger.info(f"Retrieved {len(all_products)} products.")
+            return APIResponse.build(200, {"products": all_products})
+
+        except Exception as e:
+            logger.exception(f"Error fetching product details: {str(e)}")
+            return APIResponse.build(500, {"error": "An unexpected error occurred while fetching products."})
