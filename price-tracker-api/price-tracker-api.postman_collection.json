@@ -48,6 +48,57 @@
 				}
 			},
 			"response": []
+		},
+		{
+			"name": "product-prices",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/product-prices?web_code=16162187",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"product-prices"
+					],
+					"query": [
+						{
+							"key": "web_code",
+							"value": "16162187"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "product",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/product?web_code=16162187",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"product"
+					],
+					"query": [
+						{
+							"key": "web_code",
+							"value": "16162187"
+						},
+						{
+							"key": "product_id",
+							"value": "37",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
 		}
 	],
 	"event": [

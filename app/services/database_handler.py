@@ -4,6 +4,11 @@ from app.db.db_postgres import PostgresDBClient
 from app.utils.config import Config
 from datetime import datetime
 from zoneinfo import ZoneInfo
+from app.utils.my_logger import setup_logging
+from app.utils.serialization_utils import serialize_mongo_data
+from app.utils.validate_input import validate_input_product_id_web_code
+
+logger = setup_logging(__name__)
 
 
 class DatabaseHandler:
@@ -12,18 +17,6 @@ class DatabaseHandler:
     def __init__(self, postgres_client: PostgresDBClient, mongo_client: MongoDBClient):
         self.postgres_client = postgres_client
         self.mongo_client = mongo_client
-
-    def get_existing_product(self, web_code: str) -> List[Dict[str, Any]]:
-        """
-        Retrieve an existing product by web code.
-
-        Args:
-            web_code (str): The web code of the product.
-
-        Returns:
-            List[Dict[str, Any]]: A list of product records.
-        """
-        return self.postgres_client.get_data(Config.TABLE_NAME, {"web_code": web_code})
 
     def store_new_product(self, product_details: Dict[str, Any]) -> None:
         """
@@ -85,3 +78,37 @@ class DatabaseHandler:
         """
         return self.postgres_client.get_data(Config.TABLE_NAME)
 
+    def get_product_prices(self, web_code: str) -> List[Dict[str, Any]]:
+        """
+        Retrieve product all existed prices so far from the database.
+
+        Args:
+            web_code (str): The web code of the product
+
+        Returns:
+            List[Dict[str, Any]]: A list of all product prices.
+        """
+        query = {"web_code": web_code}
+        documents = self.mongo_client.get_data(query)
+        return serialize_mongo_data(documents)
+
+    def get_product(self, product_id: Optional[int] = None, web_code: Optional[str] = None) -> List[Dict[str, Any]]:
+        """
+        Retrieve a product by either ID or web code.
+
+        Args:
+            product_id (Optional[int]): The ID of the product.
+            web_code (Optional[str]): The web code of the product.
+
+        Returns:
+            List[Dict[str, Any]]: A list of product records.
+
+        Raises:
+            ValueError: If neither 'product_id' nor 'web_code' is provided.
+        """
+        if not validate_input_product_id_web_code(product_id=product_id, web_code=web_code):
+            logger.error("Either 'product_id' or 'web_code' must be provided, but not both.")
+            return []
+
+        query_filter = {"id": product_id} if product_id else {"web_code": web_code}
+        return self.postgres_client.get_data(Config.TABLE_NAME, query_filter)

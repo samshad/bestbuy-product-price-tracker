@@ -1,9 +1,10 @@
-from typing import Dict, Any, Tuple, List
+from typing import Dict, Any, Tuple, List, Optional
 from datetime import datetime
 from app.services.scraper_service import ScraperService
 from app.services.product_processor import ProductProcessor
 from app.services.database_handler import DatabaseHandler
 from app.utils.my_logger import setup_logging
+from app.utils.validate_input import validate_input_product_id_web_code
 
 logger = setup_logging(__name__)
 
@@ -47,7 +48,7 @@ class ProductService:
         Returns:
             Tuple[str, int]: A message and status code.
         """
-        existing_product = self.database_handler.get_existing_product(product_details["web_code"])
+        existing_product = self.database_handler.get_product(web_code=product_details["web_code"])
 
         if existing_product:
             return self._handle_existing_product(product_details, existing_product[0])
@@ -89,3 +90,47 @@ class ProductService:
         except Exception as e:
             logger.error(f"Error fetching all products: {str(e)}")
             return []
+
+    def get_product_prices(self, web_code: str) -> List[Dict[str, Any]]:
+        """
+        Fetch all price details for a product from the database.
+
+        Args:
+            web_code (str): The webcode of the product.
+
+        Returns:
+            List[Dict[str, Any]]: A list of all price details for the product.
+        """
+        try:
+            prices = self.database_handler.get_product_prices(web_code)
+            return prices
+        except Exception as e:
+            logger.error(f"Error fetching product prices: {str(e)}")
+            return []
+
+    def get_product(self, product_id: Optional[int] = None, web_code: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Retrieve product by id or web code from the database.
+
+        Args:
+            product_id (Optional[int]): The id of the product
+            web_code (Optional[str]): The web code of the product
+
+        Returns:
+            Dict[str, Any]: A dict of product record.
+        """
+        # Validate input to ensure either 'web_code' or 'product_id' is provided, but not both.
+        if not validate_input_product_id_web_code(product_id=product_id, web_code=web_code):
+            logger.error("Either 'product_id' or 'web_code' must be provided, but not both.")
+            return {}
+
+        try:
+            if product_id:
+                product = self.database_handler.get_product(product_id=product_id)
+                return product[0] if product else {}
+            elif web_code:
+                product = self.database_handler.get_product(web_code=web_code)
+                return product[0] if product else {}
+        except Exception as e:
+            logger.error(f"Error fetching existing product: {str(e)}")
+            return {}

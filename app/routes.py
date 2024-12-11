@@ -5,7 +5,7 @@ from zoneinfo import ZoneInfo
 from app.services.product_service import ProductService
 from app.utils.api_response import APIResponse
 from app.utils.my_logger import setup_logging
-from app.utils.validate_input import validate_input
+from app.utils.validate_input import validate_input_web_code_url, validate_input_product_id_web_code
 
 logger = setup_logging(__name__)
 
@@ -15,7 +15,9 @@ def register_routes(app: Flask, product_service: ProductService) -> None:
     def health_check() -> Response:
         """
         Health check endpoint.
-        Returns the current server time and health status.
+
+        Returns:
+            A JSON response with a status code and current time
         """
         time_now = datetime.now(ZoneInfo("Canada/Atlantic")).isoformat()
         logger.info(f"Health check endpoint called. Current time: {time_now}")
@@ -25,8 +27,15 @@ def register_routes(app: Flask, product_service: ProductService) -> None:
     def scrape_and_store_product_details() -> Response:
         """
         Endpoint to scrape and store product data using webcode or product URL.
-        Expects JSON payload with either 'web_code' or 'url'.
-        Returns a JSON response with a message and status code.
+
+        Payload:
+            {
+                "web_code": "string",
+                "url": "string"
+            }
+
+        Returns:
+            A JSON response with a message and product details or an error message
         """
         try:
             # Extract request data
@@ -34,7 +43,7 @@ def register_routes(app: Flask, product_service: ProductService) -> None:
             url = request.json.get("url")
 
             # Validate input
-            if not validate_input(web_code, url):
+            if not validate_input_web_code_url(web_code=web_code, url=url):
                 logger.error("Either 'webcode' or 'url' must be provided, but not both.")
                 return APIResponse.build(400, {"error": "Either 'webcode' or 'url' must be provided, but not both."})
 
@@ -85,3 +94,56 @@ def register_routes(app: Flask, product_service: ProductService) -> None:
         except Exception as e:
             logger.exception(f"Error fetching product details: {str(e)}")
             return APIResponse.build(500, {"error": "An unexpected error occurred while fetching products."})
+
+    @app.route('/product', methods=['GET'])
+    def get_product_details() -> Response:
+        web_code = request.args.get("web_code")
+        product_id = request.args.get("product_id")
+
+        if not validate_input_product_id_web_code(product_id=product_id, web_code=web_code):
+            logger.error("Either 'product_id' or 'web_code' must be provided, but not both.")
+            return APIResponse.build(400, {"error": "Either 'product_id' or 'web_code' must be provided, but not both."})
+
+        try:
+            product = product_service.get_product(product_id=int(product_id) if product_id else None, web_code=web_code if web_code else None)
+
+            if not product:
+                return APIResponse.build(404, {"message": "No product found."})
+
+            return APIResponse.build(200, {"product": product})
+        except ValueError as e:
+            return APIResponse.build(400, {"error": str(e)})
+        except Exception as e:
+            logger.exception(f"Error fetching product details: {str(e)}")
+            return APIResponse.build(500, {"error": "An unexpected error occurred while fetching product details."})
+
+    @app.route('/product-prices', methods=['GET'])
+    def get_product_prices() -> Response:
+        """
+        Endpoint to retrieve all price details for a product by its web_code.
+
+        Query Params:
+            web_code (str): The webcode of the product.
+
+        Returns:
+            A JSON response containing the price details or an error message.
+        """
+        web_code = request.args.get("web_code")
+
+        if not web_code:
+            logger.error("web_code is required for /product-prices.")
+            return APIResponse.build(400, {"error": "Query parameter 'web_code' is required."})
+
+        try:
+            prices = product_service.get_product_prices(web_code)
+
+            if not prices:
+                logger.info(f"No price details found for web_code: {web_code}")
+                return APIResponse.build(404, {"message": f"No price details found for web_code: {web_code}"})
+
+            logger.info(f"Retrieved {len(prices)} price records for web_code: {web_code}")
+            return APIResponse.build(200, {"prices": prices})
+        except Exception as e:
+            logger.exception(f"Error fetching product prices for web_code {web_code}: {str(e)}")
+            return APIResponse.build(500, {"error": "An unexpected error occurred while fetching product prices."})
+

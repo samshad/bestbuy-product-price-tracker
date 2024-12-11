@@ -7,7 +7,7 @@ from playwright.sync_api import sync_playwright, Page, TimeoutError as Playwrigh
 from bs4 import BeautifulSoup, Tag
 
 from app.utils.my_logger import setup_logging
-from app.utils.validate_input import validate_input
+from app.utils.validate_input import validate_input_web_code_url
 
 logger = setup_logging(__name__)
 
@@ -25,7 +25,7 @@ class ProductDetailsScraper:
             webcode (str): Product web code to search on Best Buy.
             url (str): Direct product page URL.
         """
-        if not validate_input(webcode, url):
+        if not validate_input_web_code_url(webcode, url):
             raise ValueError("Either 'webcode' or 'url' must be provided, but not both.")
 
         self.webcode = webcode
