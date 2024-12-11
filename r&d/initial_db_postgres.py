@@ -1,41 +1,25 @@
 import os
 import psycopg2
 from psycopg2.extras import RealDictCursor
-from psycopg2.errors import DatabaseError, OperationalError
 from dotenv import load_dotenv
 from typing import Optional, List, Dict, Any
 
-from app.utils.my_logger import setup_logging
-
 # Load environment variables from .env file
 load_dotenv()
-
-# Configure logging
-logger = setup_logging(__name__)
-
 
 class PostgresDBClient:
     """A PostgreSQL database client to handle connection and CRUD operations."""
 
     def __init__(self) -> None:
-        """
-        Initialize the PostgreSQL database connection using the connection URL from environment variables.
-        """
+        """Initialize the PostgreSQL database connection using the connection URL from environment variables."""
         try:
-            postgres_uri = os.getenv("POSTGRES_URI")
-            if not postgres_uri:
-                raise ValueError("Missing POSTGRES_URI in environment variables.")
-
-            self.conn = psycopg2.connect(postgres_uri, cursor_factory=RealDictCursor)
+            self.conn = psycopg2.connect(os.getenv("POSTGRES_URI"), cursor_factory=RealDictCursor)
             self.conn.autocommit = True
             self.cursor = self.conn.cursor()
-            logger.info("Connected to PostgreSQL successfully.")
-        except (DatabaseError, OperationalError) as e:
-            logger.critical(f"Database connection error: {str(e)}", exc_info=True)
+            print("Connected to PostgreSQL successfully.")
+        except psycopg2.DatabaseError as e:
+            print(f"Database connection error: {e}")
             self.conn = None
-        except ValueError as e:
-            logger.error(f"Configuration error: {str(e)}")
-            raise
 
     def create_table(self, table_name: str, schema: str) -> None:
         """
@@ -46,11 +30,11 @@ class PostgresDBClient:
             schema (str): SQL schema defining table columns and data types.
         """
         try:
-            query = f"CREATE TABLE IF NOT EXISTS {table_name} ({schema})"
-            self.cursor.execute(query)
-            logger.info(f"Table '{table_name}' created or already exists.")
+            create_table_query = f"CREATE TABLE IF NOT EXISTS {table_name} ({schema})"
+            self.cursor.execute(create_table_query)
+            print(f"Table '{table_name}' created or already exists.")
         except psycopg2.Error as e:
-            logger.error(f"Error creating table '{table_name}': {str(e)}", exc_info=True)
+            print(f"Error creating table: {e}")
 
     def insert_data(self, table_name: str, data: Dict[str, Any]) -> Optional[int]:
         """
@@ -70,10 +54,10 @@ class PostgresDBClient:
         try:
             self.cursor.execute(query, list(data.values()))
             row_id = self.cursor.fetchone()["id"]
-            logger.info(f"Data inserted into '{table_name}' with ID: {row_id}")
+            print(f"Data inserted with ID: {row_id}")
             return row_id
         except psycopg2.Error as e:
-            logger.error(f"Error inserting data into '{table_name}': {str(e)}", exc_info=True)
+            print(f"Error inserting data: {e}")
             return None
 
     def get_data(self, table_name: str, conditions: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
@@ -88,20 +72,20 @@ class PostgresDBClient:
             List[Dict[str, Any]]: A list of dictionaries representing the retrieved rows.
         """
         query = f"SELECT * FROM {table_name}"
-        values = []
-
         if conditions:
             where_clause = ' AND '.join([f"{col} = %s" for col in conditions.keys()])
             query += f" WHERE {where_clause}"
             values = list(conditions.values())
+        else:
+            values = []
 
         try:
             self.cursor.execute(query, values)
             rows = self.cursor.fetchall()
-            logger.info(f"Retrieved {len(rows)} rows from '{table_name}' with conditions: {conditions}")
+            print(f"Retrieved {len(rows)} rows.")
             return rows
         except psycopg2.Error as e:
-            logger.error(f"Error retrieving data from '{table_name}': {str(e)}", exc_info=True)
+            print(f"Error retrieving data: {e}")
             return []
 
     def update_data(self, table_name: str, data: Dict[str, Any], conditions: Dict[str, Any]) -> int:
@@ -124,10 +108,10 @@ class PostgresDBClient:
         try:
             self.cursor.execute(query, values)
             row_count = self.cursor.rowcount
-            logger.info(f"Updated {row_count} rows in '{table_name}' with data: {data} and conditions: {conditions}")
+            print(f"Updated {row_count} rows.")
             return row_count
         except psycopg2.Error as e:
-            logger.error(f"Error updating data in '{table_name}': {str(e)}", exc_info=True)
+            print(f"Error updating data: {e}")
             return 0
 
     def delete_data(self, table_name: str, conditions: Dict[str, Any]) -> int:
@@ -148,10 +132,10 @@ class PostgresDBClient:
         try:
             self.cursor.execute(query, values)
             row_count = self.cursor.rowcount
-            logger.info(f"Deleted {row_count} rows from '{table_name}' with conditions: {conditions}")
+            print(f"Deleted {row_count} rows.")
             return row_count
         except psycopg2.Error as e:
-            logger.error(f"Error deleting data from '{table_name}': {str(e)}", exc_info=True)
+            print(f"Error deleting data: {e}")
             return 0
 
     def close(self) -> None:
@@ -159,4 +143,4 @@ class PostgresDBClient:
         if self.conn:
             self.cursor.close()
             self.conn.close()
-            logger.info("Database connection closed.")
+            print("Database connection closed.")

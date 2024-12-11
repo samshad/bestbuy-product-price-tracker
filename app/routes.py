@@ -1,5 +1,6 @@
 from flask import request, Response, Flask
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from app.services.product_service import ProductService
 from app.utils.api_response import APIResponse
@@ -16,7 +17,7 @@ def register_routes(app: Flask, product_service: ProductService) -> None:
         Health check endpoint.
         Returns the current server time and health status.
         """
-        time_now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        time_now = datetime.now(ZoneInfo("Canada/Atlantic")).isoformat()
         logger.info(f"Health check endpoint called. Current time: {time_now}")
         return APIResponse.build(200, {"status": "healthy", "time": time_now})
 
@@ -41,14 +42,16 @@ def register_routes(app: Flask, product_service: ProductService) -> None:
             logger.info(f"Starting product scrape: web_code={web_code}, url={url}")
             product_details = product_service.scrape_and_process_product(web_code, url)
 
-            # TODO: Need to implement more robust CRUD operations for the product handling
-            # message, status_code = product_service.handle_product(product_details)
+            # Handle product details
+            message, status_code = product_service.handle_product(product_details)
 
-            # Log and return response
-            message, status_code = product_details, 200
+            response_body = {
+                "message": message,
+                "product_details": product_details
+            }
 
             logger.info(f"Product scrape successful: {product_details}")
-            return APIResponse.build(status_code, {"message": message})
+            return APIResponse.build(status_code, {"message": response_body})
 
         except KeyError as e:
             logger.error(f"KeyError: {str(e)}")
