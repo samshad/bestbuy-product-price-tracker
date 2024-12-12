@@ -151,7 +151,9 @@ class ProductDetailsScraper:
 
                 # Wait for the product page to load
                 try:
-                    page.wait_for_selector("div.style-module_price__ql4Q1", timeout=timeout)
+                    page.wait_for_selector(
+                        "div.style-module_price__ql4Q1", timeout=timeout
+                    )
                 except PlaywrightTimeoutError:
                     logger.warning(
                         f"Product page took too long to load for webcode {self.webcode or self.url}. Returning None."
