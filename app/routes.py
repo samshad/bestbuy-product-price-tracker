@@ -61,13 +61,19 @@ def register_routes(app: Flask, product_service: ProductService) -> None:
             logger.info(f"Starting product scrape: web_code={web_code}, url={url}")
             product_details = product_service.scrape_and_process_product(web_code, url)
 
-            # Handle product details
-            message, status_code = product_service.handle_product(product_details)
+            if product_details:
+                # Handle product details
+                message, status_code = product_service.handle_product(product_details)
 
-            response_body = {"message": message, "product_details": product_details}
+                response_body = {"message": message, "product_details": product_details}
 
-            logger.info(f"Product scrape successful: {product_details}")
-            return APIResponse.build(status_code, {"message": response_body})
+                logger.info(f"Product scrape successful: {product_details}")
+                return APIResponse.build(status_code, {"message": response_body})
+            else:
+                logger.info(f"Product scrape failed: {product_details}")
+                return APIResponse.build(
+                    404, {"message": "Product scrape failed. No product details found."}
+                )
 
         except KeyError as e:
             logger.error(f"KeyError: {str(e)}")

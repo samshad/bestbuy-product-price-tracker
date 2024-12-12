@@ -19,7 +19,7 @@ logger = setup_logging(__name__)
 class ProductDetailsScraper:
     """A class to scrape product details from Best Buy Canada using Playwright."""
 
-    DEFAULT_TIMEOUT = 25000  # 25 seconds
+    DEFAULT_TIMEOUT = 40000  # 40 seconds
 
     def __init__(self, webcode: str = None, url: str = None) -> None:
         """
@@ -151,7 +151,7 @@ class ProductDetailsScraper:
 
                 # Wait for the product page to load
                 try:
-                    page.wait_for_selector("div.style-module_price__ql4Q1")
+                    page.wait_for_selector("div.style-module_price__ql4Q1", timeout=timeout)
                 except PlaywrightTimeoutError:
                     logger.warning(
                         f"Product page took too long to load for webcode {self.webcode or self.url}. Returning None."

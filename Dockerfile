@@ -43,5 +43,8 @@ EXPOSE ${EXPOSE_PORT}
 ENV HOST=${HOST}
 ENV PORT=${PORT}
 
+# Required for SSL connection to the database
+ENV PGSSLROOTCERT=/etc/ssl/certs/ca-certificates.crt
+
 # Command to run the application
 CMD ["sh", "-c", "date && python app.py --host=${HOST} --port=${PORT}"]

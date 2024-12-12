@@ -113,11 +113,27 @@ Ensure you have the following installed:
 }
 ```
 
-**Response Example:**
+**Success Response Example:**
 ```json
 {
   "message": "Product data added to PostgreSQL and MongoDB.",
-  "product_details": [ "..." ]
+  "product_details": {
+    "title": "Product Title",
+    "model": "Model123",
+    "web_code": "12345",
+    "price": 19999,
+    "url": "https://www.bestbuy.ca/en-ca/product/12345",
+    "save": 500,
+    "date": "2024-12-10T00:00:00-04:00"
+  }
+}
+```
+*Note:* The `price` and `save` fields are stored as integers, where the last two digits represent cents for precision.
+
+**Error Response Example:**
+```json
+{
+  "error": "Either 'web_code' or 'url' must be provided, but not both."
 }
 ```
 
@@ -128,9 +144,21 @@ Ensure you have the following installed:
 **Response Example:**
 ```json
 {
-  "products": [ "..." ]
+  "products": [
+    {
+      "title": "Product Title",
+      "model": "Model123",
+      "web_code": "12345",
+      "price": 19999,
+      "url": "https://www.bestbuy.ca/en-ca/product/12345",
+      "save": 500,
+      "date": "2024-12-10T00:00:00-04:00"
+    },
+    { "...": "..." }
+  ]
 }
 ```
+*Note:* The `price` and `save` fields are stored as integers, where the last two digits represent cents for precision.
 
 ### `/product-prices`
 **Method:** `GET`
@@ -139,7 +167,7 @@ Ensure you have the following installed:
 **Query Parameter:**
 - `web_code` (required)
 
-**Request Body Example:**
+**Request Example:**
 ```json
 {
   "web_code": "12345"
@@ -149,9 +177,19 @@ Ensure you have the following installed:
 **Response Example:**
 ```json
 {
-  "prices": [ "..." ]
+  "prices": [
+    {
+      "price": 19999,
+      "date": "2024-12-09T00:00:00-04:00"
+    },
+    {
+      "price": 18999,
+      "date": "2024-12-10T00:00:00-04:00"
+    }
+  ]
 }
 ```
+*Note:* The `price` field is stored as an integer, where the last two digits represent cents for precision.
 
 ### `/product`
 **Method:** `GET`
@@ -163,14 +201,29 @@ Ensure you have the following installed:
 - `web_code` (optional)
 - `product_id` (optional)
 
-**Response Example:**
+**Success Response Example:**
 ```json
 {
-  "product": { "...": "..." }
+  "product": {
+    "title": "Product Title",
+    "model": "Model123",
+    "web_code": "12345",
+    "price": 19999,
+    "url": "https://www.bestbuy.ca/en-ca/product/12345",
+    "save": 500,
+    "date": "2024-12-10T00:00:00-04:00"
+  }
+}
+```
+*Note:* The `price` and `save` fields are stored as integers, where the last two digits represent cents for precision.
+
+**Error Response Example:**
+```json
+{
+  "error": "Either 'web_code' or 'product_id' must be provided, but not both."
 }
 ```
 
----
 
 ## Project Structure
 ```
@@ -194,6 +247,8 @@ This structure separates concerns by organizing database operations, business lo
 ---
 
 ## Contributing
+Contributions are welcome! Please fork the repository and submit a pull request.
+
 1. Fork the repository.
 2. Create a new branch for your feature or fix:
    ```bash
