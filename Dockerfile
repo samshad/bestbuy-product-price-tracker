@@ -26,7 +26,6 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Install psycopg2
-# RUN apt-get update && apt-get install -y libpq-dev gcc
 RUN pip install psycopg2
 
 # Install Playwright and its dependencies
@@ -35,12 +34,9 @@ RUN playwright install && playwright install-deps
 # Copy the rest of the application code into the container
 COPY . .
 
-# ARG EXPOSE_PORT
 # Expose the port the app runs on
 EXPOSE ${EXPOSE_PORT}
 
-# ARG HOST
-# ARG PORT
 # Set environment variables for flexibility
 ENV HOST=${HOST}
 ENV PORT=${PORT}
