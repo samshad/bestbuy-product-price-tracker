@@ -30,7 +30,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n        \"web_code\": \"16162187\",\r\n        \"url\": \"\"\r\n}",
+					"raw": "{\r\n        \"web_code\": \"14777258\"\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -55,7 +55,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{baseUrl}}/product-prices?web_code=16162187",
+					"raw": "{{baseUrl}}/product-prices?web_code=17905836",
 					"host": [
 						"{{baseUrl}}"
 					],
@@ -65,7 +65,7 @@
 					"query": [
 						{
 							"key": "web_code",
-							"value": "16162187"
+							"value": "17905836"
 						}
 					]
 				}
@@ -92,7 +92,7 @@
 						},
 						{
 							"key": "product_id",
-							"value": "3",
+							"value": "6",
 							"disabled": true
 						}
 					]

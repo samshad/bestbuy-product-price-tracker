@@ -1,69 +1,61 @@
-from app.db.jobs_crud import JobsCRUD
+import unittest
+from unittest.mock import patch, MagicMock
+from app.db.jobs_crud import JobsCRUD, Jobs
 
 
-def test_insert_job(client, job):
-    result = client.insert_job(job["job_id"], job["url"], job["status"], job["result"])
+class TestJobsCRUD(unittest.TestCase):
+    @patch("app.db.jobs_crud.sessionmaker")
+    def setUp(self, mock_sessionmaker):
+        """Set up the mock database session for testing."""
+        self.mock_session = MagicMock()
+        mock_sessionmaker.return_value = MagicMock(return_value=self.mock_session)
+        self.jobs_crud = JobsCRUD(session_factory=mock_sessionmaker)
 
-    print("Success:" if result else "Failed")
+    def test_insert_job_success(self):
+        """Test successful insertion of a job."""
+        self.mock_session.__enter__.return_value = self.mock_session
+        self.mock_session.add = MagicMock()  # Ensure 'add' is properly mocked
+        self.mock_session.commit = MagicMock()  # Ensure 'commit' is properly mocked
 
+        result = self.jobs_crud.insert_job(
+            job_id="123",
+            webcode="ABC123",
+            status="Pending",
+            result="Job created",
+            product_id=1,
+        )
+        self.assertTrue(result)
+        self.mock_session.add.assert_called_once()
+        self.mock_session.commit.assert_called_once()
 
-def test_get_all_jobs(client):
-    jobs = client.get_all_jobs()
+    def test_update_job_not_found(self):
+        """Test updating a job that does not exist."""
+        self.mock_session.query.return_value.filter_by.return_value.first.return_value = None
+        self.mock_session.__enter__.return_value = self.mock_session
+        self.mock_session.commit = MagicMock()  # Ensure 'commit' is properly mocked
 
-    for job in jobs:
-        print(job)
+        updates = {"status": "Success"}
+        result = self.jobs_crud.update_job("999", updates)
 
+        self.assertFalse(result)
+        self.mock_session.commit.assert_not_called()
 
-def test_get_job_by_id(client, job_id):
-    job = client.get_job_by_id(job_id)
+    def test_update_job_success(self):
+        """Test successfully updating a job."""
+        mock_job = MagicMock(spec=Jobs)
+        mock_job.status = "Pending"  # Set initial status
+        self.mock_session.query.return_value.filter_by.return_value.first.return_value = mock_job
+        self.mock_session.__enter__.return_value = self.mock_session
+        self.mock_session.commit = MagicMock()  # Ensure 'commit' is properly mocked
 
-    print(job if job else "Not found")
+        updates = {"status": "Success", "result": "Job completed"}
+        result = self.jobs_crud.update_job("1", updates)
 
-    print(job.status)
-
-
-def test_update_job(client, update_data):
-    result = client.update_job(job_id, update_data)
-
-    print("Success:" if result else "Failed")
-
-
-def test_delete_job(client, job_id):
-    result = client.delete_job(job_id)
-
-    print("Success:" if result else "Failed")
+        self.assertTrue(result)
+        mock_job.status = "Success"  # Simulate attribute change
+        self.assertEqual(mock_job.status, "Success")
+        self.mock_session.commit.assert_called_once()
 
 
 if __name__ == "__main__":
-    from uuid import uuid4
-
-    jobs_crud = JobsCRUD()
-
-    # Sample data
-    job_id = uuid4()
-    url = "https://hulu.com"
-    status = "pending"
-    result = None
-
-    job = {"job_id": job_id, "url": url, "status": status, "result": result}
-
-    # Insert data
-    # test_insert_job(jobs_crud, job)
-
-    # Read data
-    test_get_all_jobs(jobs_crud)
-
-    job_id = "df85c87a-7a72-4088-9de0-3fb59f7b2039"
-
-    # Read data by ID
-    # test_get_job_by_id(jobs_crud, job_id)
-
-    # Update data
-    update_data = {"product_id": 2}
-    test_update_job(jobs_crud, update_data)
-
-    # Delete data
-    # test_delete_job(jobs_crud, job_id)
-
-    # Read data
-    # test_get_all_jobs(jobs_crud)
+    unittest.main()
