@@ -1,8 +1,10 @@
 from typing import Dict, Any, Tuple, List, Optional
-from datetime import datetime
+
+from app.db.products_crud import Products
 from app.services.scraper_service import ScraperService
 from app.services.product_processor import ProductProcessor
 from app.services.database_handler import DatabaseHandler
+from app.utils.datetime_handler import parse_datetime, get_current_datetime
 from app.utils.my_logger import setup_logging
 from app.utils.validate_input import validate_input_product_id_web_code
 
@@ -38,54 +40,50 @@ class ProductService:
             raise ValueError("Failed to scrape product data. Check webcode or URL.")
         return self.product_processor.process_product_data(raw_data)
 
-    def handle_product(self, product_details: Dict[str, Any]) -> Tuple[str, int]:
+    def product_storage_handler(
+        self, product_details: Dict[str, Any]
+    ) -> tuple[int | None, tuple[str, int]]:
         """
-        Handle product storage logic.
+        Handle storage of product details in the database.
 
         Args:
             product_details (Dict[str, Any]): The product details to store.
 
         Returns:
-            Tuple[str, int]: A message and status code.
+            Tuple[int | None, Tuple[str, int]]: The product ID and a message with status code. If product ID is None, the message is an error message.
         """
-        existing_product = self.database_handler.get_product(
-            web_code=product_details["web_code"]
-        )
 
-        if existing_product:
-            return self._handle_existing_product(product_details, existing_product[0])
+        product_id, (message, status_code) = self.database_handler.store_new_product(product_details)
+        if not product_id:
+            return product_id, (message, status_code)
+        return product_id, ("Product data added to PostgreSQL and MongoDB.", 201)
 
-        self.database_handler.store_new_product(product_details)
-        return "Product data added to PostgreSQL and MongoDB.", 201
-
-    def _handle_existing_product(
-        self, product_details: Dict[str, Any], existing_product: Dict[str, Any]
-    ) -> Tuple[str, int]:
+    def handle_existing_product(
+        self, existing_product: Products) -> tuple[str, int] | str:
         """
-        Handle logic for existing products.
+        Handle existing product data in the database.
 
         Args:
-            product_details (Dict[str, Any]): The product details to store.
             existing_product (Dict[str, Any]): The existing product details.
 
         Returns:
-            Tuple[str, int]: A message and status code.
+            Tuple[str, int] | str: A message with status code or an error message
         """
-        current_date = datetime.now().date()
-        stored_date = existing_product["date"].date()
+        current_date = parse_datetime(get_current_datetime()).date()
+        stored_date = existing_product.updated_at.date()
 
         if current_date == stored_date:
             return "Product already exists for today. No action taken.", 200
 
-        self.database_handler.update_existing_product(product_details)
+        self.database_handler.update_existing_product(existing_product.to_dict())
         return "Product price updated and new data added to MongoDB.", 200
 
-    def get_all_products(self) -> List[Dict[str, Any]]:
+    def get_all_products(self) -> list[Products] | list[Any]:
         """
         Fetch all product details from the database.
 
         Returns:
-            List[Dict[str, Any]]: A list of all product details.
+            List[Products] | List[Any]: A list of all product records.
         """
         try:
             products = self.database_handler.get_all_products()
@@ -113,7 +111,7 @@ class ProductService:
 
     def get_product(
         self, product_id: Optional[int] = None, web_code: Optional[str] = None
-    ) -> Dict[str, Any]:
+    ) -> Products | None:
         """
         Retrieve product by id or web code from the database.
 
@@ -122,7 +120,7 @@ class ProductService:
             web_code (Optional[str]): The web code of the product
 
         Returns:
-            Dict[str, Any]: A dict of product record.
+            Products | None: The product record or None if not found.
         """
         # Validate input to ensure either 'web_code' or 'product_id' is provided, but not both.
         if not validate_input_product_id_web_code(
@@ -131,15 +129,13 @@ class ProductService:
             logger.error(
                 "Either 'product_id' or 'web_code' must be provided, but not both."
             )
-            return {}
+            return None
 
         try:
-            if product_id:
-                product = self.database_handler.get_product(product_id=product_id)
-                return product[0] if product else {}
-            elif web_code:
-                product = self.database_handler.get_product(web_code=web_code)
-                return product[0] if product else {}
+            product = self.database_handler.get_product(
+                product_id=product_id, web_code=web_code
+            )
+            return product if product else None
         except Exception as e:
             logger.error(f"Error fetching existing product: {str(e)}")
-            return {}
+            return None

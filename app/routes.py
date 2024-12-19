@@ -1,6 +1,6 @@
+import json
 from flask import request, Response, Flask
-from datetime import datetime
-from zoneinfo import ZoneInfo
+from app.utils.datetime_handler import get_current_datetime
 
 from app.services.product_service import ProductService
 from app.utils.api_response import APIResponse
@@ -14,6 +14,10 @@ logger = setup_logging(__name__)
 
 
 def register_routes(app: Flask, product_service: ProductService) -> None:
+    """
+    Register all routes for the Flask app.
+    """
+
     @app.route("/health", methods=["GET"])
     def health_check() -> Response:
         """
@@ -22,7 +26,7 @@ def register_routes(app: Flask, product_service: ProductService) -> None:
         Returns:
             A JSON response with a status code and current time
         """
-        time_now = datetime.now(ZoneInfo("Canada/Atlantic")).isoformat()
+        time_now = get_current_datetime()
         logger.info(f"Health check endpoint called. Current time: {time_now}")
         return APIResponse.build(200, {"status": "healthy", "time": time_now})
 
@@ -38,7 +42,7 @@ def register_routes(app: Flask, product_service: ProductService) -> None:
             }
 
         Returns:
-            A JSON response with a message and product details or an error message
+            A JSON response with a message and product details or an error message.
         """
         try:
             # Extract request data
@@ -57,23 +61,38 @@ def register_routes(app: Flask, product_service: ProductService) -> None:
                     },
                 )
 
-            # Process product scraping
-            logger.info(f"Starting product scrape: web_code={web_code}, url={url}")
-            product_details = product_service.scrape_and_process_product(web_code, url)
+            # Check if product already exists
+            existing_product = product_service.get_product(None, web_code)
+            product_details = existing_product.to_dict() if existing_product else None
 
-            if product_details:
-                # Handle product details
-                message, status_code = product_service.handle_product(product_details)
+            if not product_details:
+                # Process product scraping
+                logger.info(f"Starting product scrape: web_code={web_code}, url={url}")
+                product_details = product_service.scrape_and_process_product(web_code, url)
+                logger.info(f"After successful scrape back to routes.py now.")
 
-                response_body = {"message": message, "product_details": product_details}
+                if product_details:
+                    # Handle product details
+                    product_id, (message, status_code) = product_service.product_storage_handler(
+                        product_details
+                    )
 
-                logger.info(f"Product scrape successful: {product_details}")
-                return APIResponse.build(status_code, {"message": response_body})
+                    logger.info(f"Product stored successfully in PostgreSQL and MongoDB. Product ID: {product_id}")
+
+                    product_details["product_id"] = product_id
+
+                    response_body = {"message": message, "product_details": product_details}
+
+                    logger.info(f"Route.py before returning APIResponse.build")
+                    return APIResponse.build(status_code, {"message": response_body})
+                else:
+                    logger.info(f"Product scrape failed: {product_details}")
+                    return APIResponse.build(
+                        404, {"message": "Product scrape failed. No product details found."}
+                    )
             else:
-                logger.info(f"Product scrape failed: {product_details}")
-                return APIResponse.build(
-                    404, {"message": "Product scrape failed. No product details found."}
-                )
+                message, status_code = product_service.handle_existing_product(existing_product)
+                return APIResponse.build(status_code, {"message": message})
 
         except KeyError as e:
             logger.error(f"KeyError: {str(e)}")
@@ -84,7 +103,7 @@ def register_routes(app: Flask, product_service: ProductService) -> None:
         except Exception as e:
             logger.exception(
                 f"Unexpected error occurred: {str(e)}"
-            )  # Logs full stack trace
+            )
             return APIResponse.build(500, {"error": "An unexpected error occurred"})
 
     @app.route("/products", methods=["GET"])
@@ -103,8 +122,10 @@ def register_routes(app: Flask, product_service: ProductService) -> None:
                 logger.info("No product details found.")
                 return APIResponse.build(404, {"message": "No products available."})
 
-            logger.info(f"Retrieved {len(all_products)} products.")
-            return APIResponse.build(200, {"products": all_products})
+            products_dict = [product.to_dict() for product in all_products]
+            products_json = json.dumps(products_dict)
+            logger.info(f"Retrieved {len(products_json)} products.")
+            return APIResponse.build(200, {"products": products_json})
 
         except Exception as e:
             logger.exception(f"Error fetching product details: {str(e)}")
@@ -139,7 +160,9 @@ def register_routes(app: Flask, product_service: ProductService) -> None:
             if not product:
                 return APIResponse.build(404, {"message": "No product found."})
 
-            return APIResponse.build(200, {"product": product})
+            product_dict = product.to_dict()
+
+            return APIResponse.build(200, {"product": product_dict})
         except ValueError as e:
             return APIResponse.build(400, {"error": str(e)})
         except Exception as e:
