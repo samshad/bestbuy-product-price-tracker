@@ -78,7 +78,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{baseUrl}}/product?web_code=16162187",
+					"raw": "{{baseUrl}}/product?web_code=14777258",
 					"host": [
 						"{{baseUrl}}"
 					],
@@ -88,13 +88,30 @@
 					"query": [
 						{
 							"key": "web_code",
-							"value": "16162187"
+							"value": "14777258"
 						},
 						{
 							"key": "product_id",
-							"value": "37",
+							"value": "3",
 							"disabled": true
 						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "products",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/products",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"products"
 					]
 				}
 			},

@@ -63,8 +63,8 @@ class Products(Base):
             "url": self.url,
             "price": self.price,
             "save": self.save,
-            "created_at": self.created_at,
-            "updated_at": self.updated_at,
+            "created_at": self.created_at.isoformat(),
+            "updated_at": self.updated_at.isoformat(),
         }
 
 
@@ -321,17 +321,13 @@ class ProductsCRUD:
 if __name__ == "__main__":
     products_crud = ProductsCRUD()
 
-    p = products_crud.get_product("", "16004258")
-
-    print(p)
-
     # Sample data
-    web_code = "123456"
+    web_code = "1234562342342"
     title = "Example Product"
     model = "Model XYZ"
     url = "https://example.com/product"
-    price = 100
-    save = 20
+    price = 10022
+    save = 201
 
     # Insert data
     # product_id = products_crud.insert_product(web_code, title, model, url, price, save)
@@ -342,4 +338,17 @@ if __name__ == "__main__":
     #     print("Failed to insert product.")
 
     # Get all products
-    # products = products_crud.get_all_products()
+    products = products_crud.get_all_products()
+
+    print(len(products))
+    print(type(products[0]))
+
+    import json
+
+    products_dict = [product.to_dict() for product in products]
+
+    print(products_dict)
+
+    products_json = json.dumps(products_dict)
+
+    print(products_json)

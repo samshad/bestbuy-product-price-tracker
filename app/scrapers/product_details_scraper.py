@@ -18,7 +18,7 @@ logger = setup_logging(__name__)
 class ProductDetailsScraper:
     """A class to scrape product details from Best Buy Canada using Playwright."""
 
-    DEFAULT_TIMEOUT = 40000  # 40 seconds
+    DEFAULT_TIMEOUT = 60000  # 60 seconds
 
     def __init__(self, webcode: str = None, url: str = None) -> None:
         """
@@ -85,7 +85,7 @@ class ProductDetailsScraper:
             "date": get_current_datetime(),
         }
 
-    def scrape(self, timeout: int = DEFAULT_TIMEOUT) -> dict | None:
+    def scrape(self, timeout: int = DEFAULT_TIMEOUT) -> Optional[dict]:
         """
         Scrape product details from Best Buy Canada.
 
@@ -93,8 +93,7 @@ class ProductDetailsScraper:
             timeout (int): Maximum time in milliseconds to wait for page elements.
 
         Returns:
-            dict: A dictionary of the scraped product details if successful.
-            None: If the product cannot be found or an invalid webcode/URL is provided.
+            Optional[dict]: The product details if successfully scraped, else None.
         """
         try:
             with sync_playwright() as p:

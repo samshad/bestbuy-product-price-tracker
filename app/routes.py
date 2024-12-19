@@ -1,3 +1,4 @@
+import json
 from flask import request, Response, Flask
 from app.utils.datetime_handler import get_current_datetime
 
@@ -41,7 +42,7 @@ def register_routes(app: Flask, product_service: ProductService) -> None:
             }
 
         Returns:
-            A JSON response with a message and product details or an error message
+            A JSON response with a message and product details or an error message.
         """
         try:
             # Extract request data
@@ -60,25 +61,38 @@ def register_routes(app: Flask, product_service: ProductService) -> None:
                     },
                 )
 
-            # Process product scraping
-            logger.info(f"Starting product scrape: web_code={web_code}, url={url}")
-            product_details = product_service.scrape_and_process_product(web_code, url)
+            # Check if product already exists
+            existing_product = product_service.get_product(None, web_code)
+            product_details = existing_product.to_dict() if existing_product else None
 
-            if product_details:
-                # Handle product details
-                product_id, (message, status_code) = product_service.handle_product(product_details)
+            if not product_details:
+                # Process product scraping
+                logger.info(f"Starting product scrape: web_code={web_code}, url={url}")
+                product_details = product_service.scrape_and_process_product(web_code, url)
+                logger.info(f"After successful scrape back to routes.py now.")
 
-                product_details["product_id"] = product_id
+                if product_details:
+                    # Handle product details
+                    product_id, (message, status_code) = product_service.product_storage_handler(
+                        product_details
+                    )
 
-                response_body = {"message": message, "product_details": product_details}
+                    logger.info(f"Product stored successfully in PostgreSQL and MongoDB. Product ID: {product_id}")
 
-                logger.info(f"Product scrape successful: {product_details}")
-                return APIResponse.build(status_code, {"message": response_body})
+                    product_details["product_id"] = product_id
+
+                    response_body = {"message": message, "product_details": product_details}
+
+                    logger.info(f"Route.py before returning APIResponse.build")
+                    return APIResponse.build(status_code, {"message": response_body})
+                else:
+                    logger.info(f"Product scrape failed: {product_details}")
+                    return APIResponse.build(
+                        404, {"message": "Product scrape failed. No product details found."}
+                    )
             else:
-                logger.info(f"Product scrape failed: {product_details}")
-                return APIResponse.build(
-                    404, {"message": "Product scrape failed. No product details found."}
-                )
+                message, status_code = product_service.handle_existing_product(existing_product)
+                return APIResponse.build(status_code, {"message": message})
 
         except KeyError as e:
             logger.error(f"KeyError: {str(e)}")
@@ -89,7 +103,7 @@ def register_routes(app: Flask, product_service: ProductService) -> None:
         except Exception as e:
             logger.exception(
                 f"Unexpected error occurred: {str(e)}"
-            )  # Logs full stack trace
+            )
             return APIResponse.build(500, {"error": "An unexpected error occurred"})
 
     @app.route("/products", methods=["GET"])
@@ -108,8 +122,10 @@ def register_routes(app: Flask, product_service: ProductService) -> None:
                 logger.info("No product details found.")
                 return APIResponse.build(404, {"message": "No products available."})
 
-            logger.info(f"Retrieved {len(all_products)} products.")
-            return APIResponse.build(200, {"products": all_products})
+            products_dict = [product.to_dict() for product in all_products]
+            products_json = json.dumps(products_dict)
+            logger.info(f"Retrieved {len(products_json)} products.")
+            return APIResponse.build(200, {"products": products_json})
 
         except Exception as e:
             logger.exception(f"Error fetching product details: {str(e)}")

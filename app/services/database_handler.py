@@ -27,15 +27,16 @@ class DatabaseHandler:
         self.mongo_client = mongo_client
         logger.info("DatabaseHandler initialized. Product and MongoDB clients are set.")
 
-    def store_new_product(self, product_details: Dict[str, Any]) -> Optional[int]:
+    def store_new_product(self, product_details: Dict[str, Any]) -> tuple[int, tuple[None, None]] | tuple[
+        None, tuple[str, int]]:
         """
         Store new product data in PostgreSQL and MongoDB.
 
         Args:
             product_details (Dict[str, Any]): Product details to store.
 
-        Raises:
-            KeyError: If required keys are missing in product_details.
+        Returns:
+            Optional[int]: The product ID if stored successfully, otherwise None.
         """
         try:
             response = self.product_client.insert_product(
@@ -49,14 +50,14 @@ class DatabaseHandler:
 
             product_id = response["product_id"]
 
-            logger.info("Product data stored in PostgreSQL. Product ID: {product_id}")
+            logger.info(f"Product data stored in PostgreSQL. Product ID: {product_id}")
 
             self._store_in_mongo(product_details)
             logger.info("Product data stored in MongoDB.")
-            return product_id
+            return product_id, (None, None)
         except KeyError as e:
             logger.error(f"Missing required key in product details: {e}")
-            raise
+            return None, ("Failed to store product data in PostgreSQL and MongoDB.", 500)
 
     def update_existing_product(self, product_details: Dict[str, Any]) -> None:
         """
