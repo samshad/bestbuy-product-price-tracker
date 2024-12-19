@@ -1,6 +1,8 @@
-from typing import Optional
-import json
-from flask import request, Response, Flask, jsonify
+from flask import request, Response, Flask
+
+from app.services.helpers.existing_product_helpers import handle_existing_product
+from app.services.helpers.scraping_helpers import scrape_product_details
+from app.services.helpers.store_new_product_details_helpers import store_new_product
 from app.utils.datetime_handler import get_current_datetime
 from app.services.product_service import ProductService
 from app.utils.api_response import APIResponse
@@ -53,29 +55,22 @@ def register_routes(app: Flask, product_service: ProductService) -> None:
                 return APIResponse.build(400, {"error": "'web_code' is required."})
 
             existing_product = product_service.get_product(None, web_code)
-            if existing_product:
-                message, status_code = product_service.handle_existing_product(
-                    existing_product
-                )
-                return APIResponse.build(status_code, {"message": message})
 
-            logger.info(f"Scraping product with web_code: {web_code}")
-            product_details = product_service.scrape_and_process_product(web_code)
+            # Scrape product details
+            product_details = scrape_product_details(web_code, product_service)
             if not product_details:
-                logger.error(f"Scraping failed for web_code: {web_code}")
                 return APIResponse.build(
                     404, {"message": "Scraping failed. No product details found."}
                 )
 
-            product_id, (message, status_code) = product_service.store_product(
-                product_details
-            )
-            product_details["product_id"] = product_id
-            logger.info(f"Product successfully stored. Product ID: {product_id}")
+            # Handle existing product
+            if existing_product:
+                return handle_existing_product(
+                    existing_product, product_details, product_service
+                )
 
-            return APIResponse.build(
-                status_code, {"message": message, "product_details": product_details}
-            )
+            # Store new product
+            return store_new_product(product_details, product_service)
 
         except (KeyError, ValueError) as e:
             logger.error(f"Input error: {str(e)}")
