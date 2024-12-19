@@ -1,14 +1,11 @@
+from typing import Optional
 import json
-from flask import request, Response, Flask
+from flask import request, Response, Flask, jsonify
 from app.utils.datetime_handler import get_current_datetime
-
 from app.services.product_service import ProductService
 from app.utils.api_response import APIResponse
 from app.utils.my_logger import setup_logging
-from app.utils.validate_input import (
-    validate_input_web_code_url,
-    validate_input_product_id_web_code,
-)
+from app.utils.validate_input import validate_input_product_id_web_code
 
 logger = setup_logging(__name__)
 
@@ -16,6 +13,10 @@ logger = setup_logging(__name__)
 def register_routes(app: Flask, product_service: ProductService) -> None:
     """
     Register all routes for the Flask app.
+
+    Args:
+        app (Flask): Flask application instance.
+        product_service (ProductService): Service layer for handling product-related logic.
     """
 
     @app.route("/health", methods=["GET"])
@@ -24,7 +25,7 @@ def register_routes(app: Flask, product_service: ProductService) -> None:
         Health check endpoint.
 
         Returns:
-            A JSON response with a status code and current time
+            Response: JSON response with a status message and current server time.
         """
         time_now = get_current_datetime()
         logger.info(f"Health check endpoint called. Current time: {time_now}")
@@ -33,186 +34,145 @@ def register_routes(app: Flask, product_service: ProductService) -> None:
     @app.route("/scrape", methods=["POST"])
     def scrape_and_store_product_details() -> Response:
         """
-        Endpoint to scrape and store product data using webcode or product URL.
+        Scrape and store product data based on web_code.
 
         Payload:
             {
-                "web_code": "string",
-                "url": "string"
+                "web_code": "string"
             }
 
         Returns:
-            A JSON response with a message and product details or an error message.
+            Response: JSON response containing product details or error message.
         """
         try:
-            # Extract request data
-            web_code = request.json.get("web_code")
-            url = request.json.get("url")
+            payload = request.json
+            web_code = payload.get("web_code") if payload else None
 
-            # Validate input
-            if not validate_input_web_code_url(web_code=web_code, url=url):
-                logger.error(
-                    "Either 'webcode' or 'url' must be provided, but not both."
-                )
-                return APIResponse.build(
-                    400,
-                    {
-                        "error": "Either 'webcode' or 'url' must be provided, but not both."
-                    },
-                )
+            if not web_code:
+                logger.error("Missing 'web_code' in request payload.")
+                return APIResponse.build(400, {"error": "'web_code' is required."})
 
-            # Check if product already exists
             existing_product = product_service.get_product(None, web_code)
-            product_details = existing_product.to_dict() if existing_product else None
-
-            if not product_details:
-                # Process product scraping
-                logger.info(f"Starting product scrape: web_code={web_code}, url={url}")
-                product_details = product_service.scrape_and_process_product(web_code, url)
-                logger.info(f"After successful scrape back to routes.py now.")
-
-                if product_details:
-                    # Handle product details
-                    product_id, (message, status_code) = product_service.product_storage_handler(
-                        product_details
-                    )
-
-                    logger.info(f"Product stored successfully in PostgreSQL and MongoDB. Product ID: {product_id}")
-
-                    product_details["product_id"] = product_id
-
-                    response_body = {"message": message, "product_details": product_details}
-
-                    logger.info(f"Route.py before returning APIResponse.build")
-                    return APIResponse.build(status_code, {"message": response_body})
-                else:
-                    logger.info(f"Product scrape failed: {product_details}")
-                    return APIResponse.build(
-                        404, {"message": "Product scrape failed. No product details found."}
-                    )
-            else:
-                message, status_code = product_service.handle_existing_product(existing_product)
+            if existing_product:
+                message, status_code = product_service.handle_existing_product(
+                    existing_product
+                )
                 return APIResponse.build(status_code, {"message": message})
 
-        except KeyError as e:
-            logger.error(f"KeyError: {str(e)}")
-            return APIResponse.build(400, {"error": "Invalid JSON payload"})
-        except ValueError as e:
-            logger.error(f"ValueError: {str(e)}")
+            logger.info(f"Scraping product with web_code: {web_code}")
+            product_details = product_service.scrape_and_process_product(web_code)
+            if not product_details:
+                logger.error(f"Scraping failed for web_code: {web_code}")
+                return APIResponse.build(
+                    404, {"message": "Scraping failed. No product details found."}
+                )
+
+            product_id, (message, status_code) = product_service.store_product(
+                product_details
+            )
+            product_details["product_id"] = product_id
+            logger.info(f"Product successfully stored. Product ID: {product_id}")
+
+            return APIResponse.build(
+                status_code, {"message": message, "product_details": product_details}
+            )
+
+        except (KeyError, ValueError) as e:
+            logger.error(f"Input error: {str(e)}")
             return APIResponse.build(400, {"error": str(e)})
         except Exception as e:
-            logger.exception(
-                f"Unexpected error occurred: {str(e)}"
-            )
-            return APIResponse.build(500, {"error": "An unexpected error occurred"})
+            logger.exception("Unexpected error occurred.")
+            return APIResponse.build(500, {"error": "An unexpected error occurred."})
 
     @app.route("/products", methods=["GET"])
     def get_all_products() -> Response:
         """
-        Endpoint to fetch all product details available in the database.
+        Fetch all products from the database.
 
         Returns:
-            A JSON response containing all product details or an error message.
+            Response: JSON response containing a list of products or an error message.
         """
         try:
-            logger.info("Fetching all product details from the database.")
-            all_products = product_service.get_all_products()
-
-            if not all_products:
-                logger.info("No product details found.")
+            logger.info("Fetching all product details.")
+            products = product_service.get_all_products()
+            if not products:
+                logger.info("No products found.")
                 return APIResponse.build(404, {"message": "No products available."})
 
-            products_dict = [product.to_dict() for product in all_products]
-            products_json = json.dumps(products_dict)
-            logger.info(f"Retrieved {len(products_json)} products.")
-            return APIResponse.build(200, {"products": products_json})
-
+            logger.info(f"Retrieved {len(products)} products.")
+            return APIResponse.build(200, {"products": [p.to_dict() for p in products]})
         except Exception as e:
-            logger.exception(f"Error fetching product details: {str(e)}")
+            logger.exception("Error fetching product details.")
             return APIResponse.build(
                 500, {"error": "An unexpected error occurred while fetching products."}
             )
 
     @app.route("/product", methods=["GET"])
     def get_product_details() -> Response:
+        """
+        Fetch product details by product_id or web_code.
+
+        Query Params:
+            product_id (int, optional): Product ID.
+            web_code (str, optional): Web code of the product.
+
+        Returns:
+            Response: JSON response containing product details or error message.
+        """
+        product_id = request.args.get("product_id", type=int)
         web_code = request.args.get("web_code")
-        product_id = request.args.get("product_id")
 
         if not validate_input_product_id_web_code(
             product_id=product_id, web_code=web_code
         ):
             logger.error(
-                "Either 'product_id' or 'web_code' must be provided, but not both."
+                "Invalid input: Either 'product_id' or 'web_code' must be provided."
             )
             return APIResponse.build(
                 400,
                 {
-                    "error": "Either 'product_id' or 'web_code' must be provided, but not both."
+                    "error": "Invalid input: Either 'product_id' or 'web_code' must be provided."
                 },
             )
 
         try:
-            product = product_service.get_product(
-                product_id=int(product_id) if product_id else None,
-                web_code=web_code if web_code else None,
-            )
-
+            product = product_service.get_product(product_id, web_code)
             if not product:
+                logger.info("No product found.")
                 return APIResponse.build(404, {"message": "No product found."})
 
-            product_dict = product.to_dict()
-
-            return APIResponse.build(200, {"product": product_dict})
-        except ValueError as e:
-            return APIResponse.build(400, {"error": str(e)})
-        except Exception as e:
-            logger.exception(f"Error fetching product details: {str(e)}")
-            return APIResponse.build(
-                500,
-                {
-                    "error": "An unexpected error occurred while fetching product details."
-                },
+            logger.info(
+                f"Retrieved product details for product_id: {product_id} or web_code: {web_code}"
             )
+            return APIResponse.build(200, {"product": product.to_dict()})
+        except Exception as e:
+            logger.exception("Error fetching product details.")
+            return APIResponse.build(500, {"error": "An unexpected error occurred."})
 
     @app.route("/product-prices", methods=["GET"])
     def get_product_prices() -> Response:
         """
-        Endpoint to retrieve all price details for a product by its web_code.
+        Fetch price details for a product by its web_code.
 
         Query Params:
-            web_code (str): The webcode of the product.
+            web_code (str): Web code of the product.
 
         Returns:
-            A JSON response containing the price details or an error message.
+            Response: JSON response containing price details or error message.
         """
         web_code = request.args.get("web_code")
-
         if not web_code:
-            logger.error("web_code is required for /product-prices.")
-            return APIResponse.build(
-                400, {"error": "Query parameter 'web_code' is required."}
-            )
+            logger.error("Missing query parameter: 'web_code'.")
+            return APIResponse.build(400, {"error": "'web_code' is required."})
 
         try:
             prices = product_service.get_product_prices(web_code)
-
             if not prices:
-                logger.info(f"No price details found for web_code: {web_code}")
-                return APIResponse.build(
-                    404, {"message": f"No price details found for web_code: {web_code}"}
-                )
+                logger.info(f"No prices found for web_code: {web_code}")
+                return APIResponse.build(404, {"message": "No prices found."})
 
-            logger.info(
-                f"Retrieved {len(prices)} price records for web_code: {web_code}"
-            )
+            logger.info(f"Retrieved price details for web_code: {web_code}")
             return APIResponse.build(200, {"prices": prices})
         except Exception as e:
-            logger.exception(
-                f"Error fetching product prices for web_code {web_code}: {str(e)}"
-            )
-            return APIResponse.build(
-                500,
-                {
-                    "error": "An unexpected error occurred while fetching product prices."
-                },
-            )
+            logger.exception("Error fetching product prices.")
+            return APIResponse.build(500, {"error": "An unexpected error occurred."})

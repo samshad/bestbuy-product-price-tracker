@@ -1,5 +1,5 @@
 import os
-from typing import List, Optional, Any, Dict, Type
+from typing import List, Optional, Any, Dict
 
 from sqlalchemy import create_engine, Column, String, DateTime, Integer
 from sqlalchemy.exc import SQLAlchemyError
@@ -48,6 +48,7 @@ class Products(Base):
     )
 
     def __repr__(self) -> str:
+        """Return the string representation of the product object."""
         return (
             f"Products(id={self.product_id}, web_code={self.web_code}, title={self.title}, "
             f"model={self.model}, url={self.url}, price={self.price}, save={self.save}, "
@@ -55,6 +56,12 @@ class Products(Base):
         )
 
     def to_dict(self) -> Dict[str, Any]:
+        """
+        Convert the product object to a dictionary.
+
+        Returns:
+            Dict[str, Any]: A dictionary containing the product details.
+        """
         return {
             "product_id": self.product_id,
             "web_code": self.web_code,
@@ -77,7 +84,7 @@ class ProductsCRUD:
             self.engine = create_engine(POSTGRES_URI)
             Base.metadata.create_all(self.engine)
             self.Session = sessionmaker(bind=self.engine)
-            logger.info("Connected to PostgreSQL successfully.")
+            logger.info("Connected to the database successfully.")
         except SQLAlchemyError as e:
             logger.critical(f"Database connection error: {str(e)}", exc_info=True)
             raise e
@@ -125,7 +132,7 @@ class ProductsCRUD:
             logger.error(f"Error inserting product: {str(e)}", exc_info=True)
             return None
 
-    def get_all_products(self) -> list[Type[Products]] | list[Any]:
+    def get_all_products(self) -> List[Products]:
         """
         Retrieve all products from the database.
 
@@ -141,6 +148,26 @@ class ProductsCRUD:
             logger.error(f"Error retrieving products: {str(e)}", exc_info=True)
             return []
 
+    # def get_all_products(self, offset: int = 0, limit: int = 10) -> List[Products]:
+    #     """
+    #     Retrieve all products with pagination.
+    #
+    #     Args:
+    #         offset (int): Starting point of records to fetch.
+    #         limit (int): Number of records to fetch.
+    #
+    #     Returns:
+    #         List[Products]: A paginated list of product records.
+    #     """
+    #     try:
+    #         with self.Session() as session:
+    #             products = session.query(Products).offset(offset).limit(limit).all()
+    #             logger.info("Products retrieved successfully with pagination.")
+    #             return products
+    #     except SQLAlchemyError as e:
+    #         logger.error(f"Error retrieving products: {str(e)}", exc_info=True)
+    #         return []
+    #
     # def get_product_by_id(self, product_id: int) -> Optional[Products]:
     #     """
     #     Retrieve a product by its ID.
@@ -328,27 +355,3 @@ if __name__ == "__main__":
     url = "https://example.com/product"
     price = 10022
     save = 201
-
-    # Insert data
-    # product_id = products_crud.insert_product(web_code, title, model, url, price, save)
-
-    # if product_id:
-    #     print("Product inserted. Product_ID:", product_id)
-    # else:
-    #     print("Failed to insert product.")
-
-    # Get all products
-    products = products_crud.get_all_products()
-
-    print(len(products))
-    print(type(products[0]))
-
-    import json
-
-    products_dict = [product.to_dict() for product in products]
-
-    print(products_dict)
-
-    products_json = json.dumps(products_dict)
-
-    print(products_json)

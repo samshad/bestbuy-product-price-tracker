@@ -10,7 +10,6 @@ from playwright.sync_api import (
 from bs4 import BeautifulSoup, Tag
 
 from app.utils.my_logger import setup_logging
-from app.utils.validate_input import validate_input_web_code_url
 
 logger = setup_logging(__name__)
 
@@ -20,21 +19,18 @@ class ProductDetailsScraper:
 
     DEFAULT_TIMEOUT = 60000  # 60 seconds
 
-    def __init__(self, webcode: str = None, url: str = None) -> None:
+    def __init__(self, webcode: str) -> None:
         """
         Initialize the ProductDetailsScraper.
 
         Args:
             webcode (str): Product web code to search on Best Buy.
-            url (str): Direct product page URL.
         """
-        if not validate_input_web_code_url(webcode, url):
-            raise ValueError(
-                "Either 'webcode' or 'url' must be provided, but not both."
-            )
+        self.url = None
+        if not webcode:
+            raise ValueError("Product 'webcode' must be provided.")
 
         self.webcode = webcode
-        self.url = url
         self.search_url = (
             f"https://www.bestbuy.ca/en-ca/search?search={webcode}" if webcode else None
         )  # search url not allowed by robots.txt
@@ -186,7 +182,6 @@ class ProductDetailsScraper:
 
 if __name__ == "__main__":
     scraper = ProductDetailsScraper(webcode="16004258")
-    # scraper = ProductDetailsScraper(url="https://www.bestbuy.ca/en-ca/product/170765210")
 
     product_details = scraper.scrape()
     if product_details is None:

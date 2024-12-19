@@ -12,25 +12,22 @@ class ScraperService:
         """Initialize service with required dependencies."""
         pass
 
-    def scrape_product(self, webcode: str, url: str) -> Optional[Dict[str, Any]]:
+    def scrape_product(self, webcode: str) -> Optional[Dict[str, Any]]:
         """
         Scrape product details using the appropriate scraper.
 
         Args:
             webcode (str): Product web code.
-            url (str): Product URL.
 
         Returns:
             Optional[Dict[str, Any]]: Scraped product data or None if scraping fails.
         """
         try:
-            scraper = ScraperFactory.create_scraper(webcode, url)
+            scraper = ScraperFactory.create_scraper(webcode)
             product_details = scraper.scrape()
 
             if not product_details:
-                logger.warning(
-                    f"Failed to scrape product data. Webcode: {webcode}, URL: {url}"
-                )
+                logger.warning(f"Failed to scrape product data. Webcode: {webcode}")
                 return None
 
             logger.info(f"Scraped product data: {product_details}")

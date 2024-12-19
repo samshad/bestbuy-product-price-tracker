@@ -29,8 +29,8 @@ class Jobs(Base):
 
     __tablename__ = "jobs"
 
-    job_id = Column(String, primary_key=True)
-    url = Column(String, nullable=False)
+    job_id = Column(String, primary_key=True, nullable=False, unique=True)
+    webcode = Column(String, nullable=False)
     status = Column(String, nullable=False)
     result = Column(String, nullable=True)
     product_id = Column(Integer, nullable=True)
@@ -43,11 +43,34 @@ class Jobs(Base):
     )
 
     def __repr__(self) -> str:
+        """
+        Return a string representation of the job record.
+
+        Returns:
+            str: A string representation of the job record.
+        """
         return (
-            f"Jobs(job_id={self.job_id}, url={self.url}, status={self.status}, "
+            f"Jobs(job_id={self.job_id}, webcode={self.webcode}, status={self.status}, "
             f"result={self.result}, product_id={self.product_id}, created_at={self.created_at}, "
             f"updated_at={self.updated_at})"
         )
+
+    def to_dict(self) -> Dict[str, Any]:
+        """
+        Convert the job record to a dictionary.
+
+        Returns:
+            Dict[str, Any]: A dictionary representation of the job record.
+        """
+        return {
+            "job_id": self.job_id,
+            "webcode": self.webcode,
+            "status": self.status,
+            "result": self.result,
+            "product_id": self.product_id,
+            "created_at": self.created_at,
+            "updated_at": self.updated_at,
+        }
 
 
 class JobsCRUD:
@@ -64,10 +87,26 @@ class JobsCRUD:
             logger.critical(f"Database connection error: {str(e)}", exc_info=True)
             raise e
 
+    def _validate_parameters(self, parameters: Dict[str, Any]) -> bool:
+        """
+        Validate parameters to ensure they meet basic constraints.
+
+        Args:
+            parameters (Dict[str, Any]): Dictionary of parameters to validate.
+
+        Returns:
+            bool: True if validation passes, False otherwise.
+        """
+        for key, value in parameters.items():
+            if not value:
+                logger.error(f"Validation failed: {key} is missing or empty.")
+                return False
+        return True
+
     def insert_job(
         self,
         job_id: str,
-        url: str,
+        webcode: str,
         status: str,
         result: Optional[str] = None,
         product_id: Optional[int] = None,
@@ -77,7 +116,7 @@ class JobsCRUD:
 
         Args:
             job_id (str): Unique identifier for the job.
-            url (str): URL associated with the job.
+            webcode (str): Product webcode associated with the job.
             status (str): Status of the job (e.g., Pending, In Progress, Success, Failed).
             result (Optional[str]): Job result or error message.
             product_id (Optional[int]): ID of the product associated with the job.
@@ -85,12 +124,17 @@ class JobsCRUD:
         Returns:
             bool: True if the job was inserted successfully, False otherwise.
         """
+
+        parameters = {"job_id": job_id, "webcode": webcode, "status": status}
+        if not self._validate_parameters(parameters):
+            return False
+
         try:
             with self.Session() as session:
                 with session.begin():
                     job = Jobs(
                         job_id=job_id,
-                        url=url,
+                        webcode=webcode,
                         status=status,
                         result=result,
                         product_id=product_id,
