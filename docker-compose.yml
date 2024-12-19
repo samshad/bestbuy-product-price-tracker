@@ -1,21 +1,58 @@
-
 services:
   web:
-    build:
-      context: .
-      args:
-        EXPOSE_PORT: ${EXPOSE_PORT:-5000} # Default to 5000 if not set
-        HOST: ${HOST:-0.0.0.0}           # Default to 0.0.0.0 if not set
-        PORT: ${PORT:-5000}              # Default to 5000 if not set
+    build: .
     ports:
-      - "${EXPOSE_PORT:-5000}:${EXPOSE_PORT:-5000}" # Default to 5000 if EXPOSE_PORT is not set
-    environment:
-      FLASK_ENV: ${FLASK_ENV:-development} # Default to 'development' if FLASK_ENV is not set
-      TZ: ${TIMEZONE:-Canada/Atlantic}                # Default to 'Canada/Atlantic' if TIMEZONE is not set
-    env_file:
-      - .env                              # Load environment variables from the .env file
-    volumes:
-      - ./logs:/app/logs
+      - "5000:5000"
+#    depends_on:
+#      - redis
+#      - rabbitmq
+#    environment:
+#      - REDIS_HOST=redis
+#      - RABBITMQ_BROKER=amqp://guest:guest@rabbitmq:5672//
 
-volumes:
-  logs:
+  worker:
+    build: .
+    command: celery -A tmp.celery_app worker -l info -Q scrape_queue
+#    depends_on:
+#      - redis
+#      - rabbitmq
+#    environment:
+#      - REDIS_HOST=redis
+#      - RABBITMQ_BROKER=amqp://guest:guest@rabbitmq:5672//
+
+#  rabbitmq:
+#    image: "rabbitmq:3-management"
+#    container_name: rabbitmq_local
+#    ports:
+#      - "5672:5672"    # Default RabbitMQ messaging port
+#      - "15672:15672"  # RabbitMQ Management UI port
+#    volumes:
+#      - ./rabbitmq_data:/var/lib/rabbitmq  # Correct RabbitMQ data path
+##    environment:
+##      - RABBITMQ_DEFAULT_USER=admin      # Optional: Set default username
+##      - RABBITMQ_DEFAULT_PASS=admin      # Optional: Set default password
+#
+#  redis:
+#    image: redis:latest
+#    container_name: redis_local
+#    ports:
+#      - "6379:6379"  # Map Redis port 6379 to localhost
+#    volumes:
+#      - ./redis_data:/data  # Persist Redis data
+#    command: [ "redis-server", "--appendonly", "yes" ]  # Enable persistence
+#
+#  redis-commander:
+#    image: rediscommander/redis-commander:latest
+#    container_name: redis_commander_local
+#    hostname: redis_commander
+#    restart: always
+#    ports:
+#      - "8081:8081"  # Map Redis Commander port 8081 to localhost
+#    environment:
+#      - REDIS_HOSTS=local:redis:6379  # Connect to Redis container
+#
+#volumes:
+#  rabbitmq_data:  # Named volume for RabbitMQ persistence
+#    driver: local  # Use local driver for named volume
+#  redis_data:     # Named volume for Redis persistence
+#    driver: local  # Use local driver for named volume

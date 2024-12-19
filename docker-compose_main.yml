@@ -1,0 +1,21 @@
+
+services:
+  web:
+    build:
+      context: .
+      args:
+        EXPOSE_PORT: ${EXPOSE_PORT:-5000} # Default to 5000 if not set
+        HOST: ${HOST:-0.0.0.0}           # Default to 0.0.0.0 if not set
+        PORT: ${PORT:-5000}              # Default to 5000 if not set
+    ports:
+      - "${EXPOSE_PORT:-5000}:${EXPOSE_PORT:-5000}" # Default to 5000 if EXPOSE_PORT is not set
+    environment:
+      FLASK_ENV: ${FLASK_ENV:-development} # Default to 'development' if FLASK_ENV is not set
+      TZ: ${TIMEZONE:-Canada/Atlantic}                # Default to 'Canada/Atlantic' if TIMEZONE is not set
+    env_file:
+      - .env                              # Load environment variables from the .env file
+    volumes:
+      - ./logs:/app/logs
+
+volumes:
+  logs:

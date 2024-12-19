@@ -1,7 +1,6 @@
 import time
 from typing import Optional
-from datetime import datetime
-from zoneinfo import ZoneInfo
+from app.utils.datetime_handler import get_current_datetime
 
 from playwright.sync_api import (
     sync_playwright,
@@ -83,7 +82,7 @@ class ProductDetailsScraper:
             )
             .replace("SAVE $", "")
             .strip(),
-            "date": datetime.now(ZoneInfo("Canada/Atlantic")).isoformat(),
+            "date": get_current_datetime(),
         }
 
     def scrape(self, timeout: int = DEFAULT_TIMEOUT) -> dict | None:
@@ -187,7 +186,7 @@ class ProductDetailsScraper:
 
 
 if __name__ == "__main__":
-    scraper = ProductDetailsScraper(webcode="17699676")
+    scraper = ProductDetailsScraper(webcode="16004258")
     # scraper = ProductDetailsScraper(url="https://www.bestbuy.ca/en-ca/product/170765210")
 
     product_details = scraper.scrape()

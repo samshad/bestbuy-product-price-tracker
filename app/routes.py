@@ -1,6 +1,5 @@
 from flask import request, Response, Flask
-from datetime import datetime
-from zoneinfo import ZoneInfo
+from app.utils.datetime_handler import get_current_datetime
 
 from app.services.product_service import ProductService
 from app.utils.api_response import APIResponse
@@ -14,6 +13,10 @@ logger = setup_logging(__name__)
 
 
 def register_routes(app: Flask, product_service: ProductService) -> None:
+    """
+    Register all routes for the Flask app.
+    """
+
     @app.route("/health", methods=["GET"])
     def health_check() -> Response:
         """
@@ -22,7 +25,7 @@ def register_routes(app: Flask, product_service: ProductService) -> None:
         Returns:
             A JSON response with a status code and current time
         """
-        time_now = datetime.now(ZoneInfo("Canada/Atlantic")).isoformat()
+        time_now = get_current_datetime()
         logger.info(f"Health check endpoint called. Current time: {time_now}")
         return APIResponse.build(200, {"status": "healthy", "time": time_now})
 

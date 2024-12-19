@@ -2,8 +2,7 @@ from typing import Dict, Any, Optional, List
 from app.db.db_mongo import MongoDBClient
 from app.db.db_postgres import PostgresDBClient
 from app.utils.config import Config
-from datetime import datetime
-from zoneinfo import ZoneInfo
+from app.utils.datetime_handler import get_current_datetime
 from app.utils.my_logger import setup_logging
 from app.utils.serialization_utils import serialize_mongo_data
 from app.utils.validate_input import validate_input_product_id_web_code
@@ -41,7 +40,7 @@ class DatabaseHandler:
         Returns:
             None
         """
-        current_time = datetime.now(ZoneInfo("Canada/Atlantic")).isoformat()
+        current_time = get_current_datetime()
         self.postgres_client.update_data(
             Config.TABLE_NAME,
             {"price": product_details["price"], "date": current_time},
