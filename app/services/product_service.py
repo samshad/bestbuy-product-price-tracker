@@ -1,4 +1,6 @@
 from typing import Dict, Any, Tuple, List, Optional
+
+from app.db.products_crud import Products
 from app.services.scraper_service import ScraperService
 from app.services.product_processor import ProductProcessor
 from app.services.database_handler import DatabaseHandler
@@ -38,7 +40,8 @@ class ProductService:
             raise ValueError("Failed to scrape product data. Check webcode or URL.")
         return self.product_processor.process_product_data(raw_data)
 
-    def handle_product(self, product_details: Dict[str, Any]) -> Tuple[str, int]:
+    def handle_product(self, product_details: Dict[str, Any]) -> tuple[Any, tuple[str, int]] | tuple[
+        int | None, tuple[str, int]]:
         """
         Handle product storage logic.
 
@@ -48,19 +51,17 @@ class ProductService:
         Returns:
             Tuple[str, int]: A message and status code.
         """
-        existing_product = self.database_handler.get_product(
-            web_code=product_details["web_code"]
-        )
+        existing_product = self.database_handler.get_product(product_id=None, web_code=product_details["web_code"])
 
         if existing_product:
-            return self._handle_existing_product(product_details, existing_product[0])
+            return self._handle_existing_product(product_details, existing_product)
 
-        self.database_handler.store_new_product(product_details)
-        return "Product data added to PostgreSQL and MongoDB.", 201
+        product_id = self.database_handler.store_new_product(product_details)
+        return product_id, ("Product data added to PostgreSQL and MongoDB.", 201)
 
     def _handle_existing_product(
-        self, product_details: Dict[str, Any], existing_product: Dict[str, Any]
-    ) -> Tuple[str, int]:
+        self, product_details: Dict[str, Any], existing_product: Products
+    ) -> tuple[Any, tuple[str, int]]:
         """
         Handle logic for existing products.
 
@@ -69,16 +70,16 @@ class ProductService:
             existing_product (Dict[str, Any]): The existing product details.
 
         Returns:
-            Tuple[str, int]: A message and status code.
+            Tuple[Any, Tuple[str, int]]: The product ID and a message with status code.
         """
         current_date = parse_datetime(get_current_datetime()).date()
-        stored_date = existing_product["date"].date()
+        stored_date = existing_product.updated_at.date()
 
         if current_date == stored_date:
-            return "Product already exists for today. No action taken.", 200
+            return existing_product.product_id, ("Product already exists for today. No action taken.", 200)
 
         self.database_handler.update_existing_product(product_details)
-        return "Product price updated and new data added to MongoDB.", 200
+        return existing_product.product_id, ("Product price updated and new data added to MongoDB.", 200)
 
     def get_all_products(self) -> List[Dict[str, Any]]:
         """
@@ -113,7 +114,7 @@ class ProductService:
 
     def get_product(
         self, product_id: Optional[int] = None, web_code: Optional[str] = None
-    ) -> Dict[str, Any]:
+    ) -> Products | None:
         """
         Retrieve product by id or web code from the database.
 
@@ -131,15 +132,11 @@ class ProductService:
             logger.error(
                 "Either 'product_id' or 'web_code' must be provided, but not both."
             )
-            return {}
+            return None
 
         try:
-            if product_id:
-                product = self.database_handler.get_product(product_id=product_id)
-                return product[0] if product else {}
-            elif web_code:
-                product = self.database_handler.get_product(web_code=web_code)
-                return product[0] if product else {}
+            product = self.database_handler.get_product(product_id=product_id, web_code=web_code)
+            return product if product else None
         except Exception as e:
             logger.error(f"Error fetching existing product: {str(e)}")
-            return {}
+            return None

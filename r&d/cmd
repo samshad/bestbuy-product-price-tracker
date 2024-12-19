@@ -2,4 +2,8 @@
 # Copy file from container to host
 docker cp container-id:/app/logs/filename.log D:/filename.log
 
+docker compose up -d
+docker compose down --rmi all
+
+
 

@@ -25,11 +25,11 @@ COPY requirements.txt .
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Install psycopg2-binary for PostgreSQL
-RUN pip install psycopg2-binary
+# Install psycopg2
+RUN pip install psycopg2
 
 # Install Playwright and its dependencies
-# RUN playwright install && playwright install-deps
+RUN playwright install && playwright install-deps
 
 # Copy the rest of the application code into the container
 COPY . .
@@ -45,4 +45,4 @@ ENV PORT=${PORT}
 ENV PGSSLROOTCERT=/etc/ssl/certs/ca-certificates.crt
 
 # Command to run the application
-CMD ["sh", "-c", "date && python tmp.py --host=${HOST} --port=${PORT}"]
+CMD ["sh", "-c", "date && python app.py --host=${HOST} --port=${PORT}"]

@@ -66,7 +66,9 @@ def register_routes(app: Flask, product_service: ProductService) -> None:
 
             if product_details:
                 # Handle product details
-                message, status_code = product_service.handle_product(product_details)
+                product_id, (message, status_code) = product_service.handle_product(product_details)
+
+                product_details["product_id"] = product_id
 
                 response_body = {"message": message, "product_details": product_details}
 
@@ -142,7 +144,9 @@ def register_routes(app: Flask, product_service: ProductService) -> None:
             if not product:
                 return APIResponse.build(404, {"message": "No product found."})
 
-            return APIResponse.build(200, {"product": product})
+            product_dict = product.to_dict()
+
+            return APIResponse.build(200, {"product": product_dict})
         except ValueError as e:
             return APIResponse.build(400, {"error": str(e)})
         except Exception as e:

@@ -24,9 +24,16 @@ def test_get_all_products(client):
 
 
 def test_get_product_by_id(client, product_id):
-    product = client.get_product_by_id(product_id)
+    product = client.get_product(product_id, "")
 
     print(f"From get by id: {product}" if product else "Not found")
+    print("-----------------")
+
+
+def test_get_product_by_web_code(client, web_code):
+    product = client.get_product("", web_code)
+
+    print(f"From get by web code: {product}" if product else "Not found")
     print("-----------------")
 
 
@@ -60,20 +67,21 @@ if __name__ == "__main__":
     # test_insert_data(products_crud, product)
 
     # read data
-    test_get_all_products(products_crud)
+    # test_get_all_products(products_crud)
 
-    product_id = 3
+    product_id = 1
     # test_get_product_by_id(products_crud, product_id)
+    test_get_product_by_web_code(products_crud, "123456")
     #
     # update data
-    update_data = {
-        "title": "Updated Product Title",
-        "model": "Updated Product Model",
-        "price": 5999,
-    }
-    test_update_product(products_crud, update_data)
-
-    test_get_all_products(products_crud)
+    # update_data = {
+    #     "title": "Updated Product Title",
+    #     "model": "Updated Product Model",
+    #     "price": 5999,
+    # }
+    # test_update_product(products_crud, update_data)
+    #
+    # test_get_all_products(products_crud)
     #
     # # delete data
     # test_delete_product(products_crud, product_id)
