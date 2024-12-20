@@ -1,11 +1,9 @@
 from flask import Flask, request, jsonify
 from time import sleep
 import celery
-import redis
 import psycopg2
 import uuid
 import json
-from datetime import datetime
 import os
 from dotenv import load_dotenv
 

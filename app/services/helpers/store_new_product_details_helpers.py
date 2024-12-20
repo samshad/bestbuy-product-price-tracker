@@ -6,7 +6,10 @@ from app.utils.my_logger import setup_logging
 
 logger = setup_logging(__name__)
 
-def store_new_product(product_details: dict, product_service: ProductService) -> Response:
+
+def store_new_product(
+    product_details: dict, product_service: ProductService
+) -> Response:
     """
     Store a new product in the database.
 
@@ -26,6 +29,6 @@ def store_new_product(product_details: dict, product_service: ProductService) ->
         return APIResponse.build(
             status_code, {"message": message, "product_details": product_details}
         )
-    except Exception as e:
+    except Exception:
         logger.exception("Error storing new product.")
         return APIResponse.build(500, {"error": "Failed to store product."})

@@ -75,7 +75,7 @@ def register_routes(app: Flask, product_service: ProductService) -> None:
         except (KeyError, ValueError) as e:
             logger.error(f"Input error: {str(e)}")
             return APIResponse.build(400, {"error": str(e)})
-        except Exception as e:
+        except Exception:
             logger.exception("Unexpected error occurred.")
             return APIResponse.build(500, {"error": "An unexpected error occurred."})
 
@@ -96,7 +96,7 @@ def register_routes(app: Flask, product_service: ProductService) -> None:
 
             logger.info(f"Retrieved {len(products)} products.")
             return APIResponse.build(200, {"products": [p.to_dict() for p in products]})
-        except Exception as e:
+        except Exception:
             logger.exception("Error fetching product details.")
             return APIResponse.build(
                 500, {"error": "An unexpected error occurred while fetching products."}
@@ -140,7 +140,7 @@ def register_routes(app: Flask, product_service: ProductService) -> None:
                 f"Retrieved product details for product_id: {product_id} or web_code: {web_code}"
             )
             return APIResponse.build(200, {"product": product.to_dict()})
-        except Exception as e:
+        except Exception:
             logger.exception("Error fetching product details.")
             return APIResponse.build(500, {"error": "An unexpected error occurred."})
 
@@ -168,6 +168,6 @@ def register_routes(app: Flask, product_service: ProductService) -> None:
 
             logger.info(f"Retrieved price details for web_code: {web_code}")
             return APIResponse.build(200, {"prices": prices})
-        except Exception as e:
+        except Exception:
             logger.exception("Error fetching product prices.")
             return APIResponse.build(500, {"error": "An unexpected error occurred."})

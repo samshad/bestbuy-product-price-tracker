@@ -1,4 +1,4 @@
-from typing import Dict, Any, Tuple, List, Optional, Union
+from typing import Dict, Any, Tuple, List, Optional
 
 from app.db.products_crud import Products
 from app.services.scraper_service import ScraperService
@@ -79,7 +79,9 @@ class ProductService:
             logger.error(f"Unexpected error storing product: {e}")
             return None, ("Internal server error", 500)
 
-    def handle_existing_product(self, existing_product: Products, new_product_details: Dict[str, Any]) -> Tuple[str, int]:
+    def handle_existing_product(
+        self, existing_product: Products, new_product_details: Dict[str, Any]
+    ) -> Tuple[str, int]:
         """
         Update or skip processing for an existing product based on the last update date.
 
@@ -98,7 +100,9 @@ class ProductService:
 
         if existing_product.price != new_product_details["price"]:
             self.database_handler.update_existing_product(new_product_details)
-            logger.info(f"Product ID: {existing_product.product_id} updated successfully.")
+            logger.info(
+                f"Product ID: {existing_product.product_id} updated successfully."
+            )
             return "Product details updated.", 200
 
         if current_date == stored_date:
@@ -106,7 +110,9 @@ class ProductService:
             return "Product already exists for today. No action taken.", 200
 
         self.database_handler.update_existing_product(new_product_details)
-        logger.info(f"Product {new_product_details['product_id']} updated successfully.")
+        logger.info(
+            f"Product {new_product_details['product_id']} updated successfully."
+        )
         return "Product details updated.", 200
 
     def get_all_products(self) -> List[Products]:

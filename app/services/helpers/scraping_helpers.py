@@ -18,7 +18,7 @@ def scrape_product_details(
         Optional[dict]: Scraped product details if successful, else None.
     """
     try:
-        logger.info(f"Scraping product with web_code: {web_code}")
+        logger.info(f"Starting scraping product with web_code: {web_code}")
         return product_service.scrape_and_process_product(web_code)
     except Exception as e:
         logger.error(f"Scraping failed for web_code {web_code}: {str(e)}")

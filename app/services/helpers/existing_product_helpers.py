@@ -3,6 +3,7 @@ from flask import Response
 from app.services.product_service import ProductService
 from app.utils.api_response import APIResponse
 
+
 def handle_existing_product(
     existing_product, new_product_details: dict, product_service: ProductService
 ) -> Response:
@@ -17,5 +18,7 @@ def handle_existing_product(
     Returns:
         Response: JSON response with a status message.
     """
-    message, status_code = product_service.handle_existing_product(existing_product, new_product_details)
+    message, status_code = product_service.handle_existing_product(
+        existing_product, new_product_details
+    )
     return APIResponse.build(status_code, {"message": message})
