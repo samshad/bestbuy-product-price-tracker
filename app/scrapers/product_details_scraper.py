@@ -17,7 +17,7 @@ logger = setup_logging(__name__)
 class ProductDetailsScraper:
     """A class to scrape product details from Best Buy Canada using Playwright."""
 
-    DEFAULT_TIMEOUT = 60000  # 60 seconds
+    DEFAULT_TIMEOUT = 40000  # 40 seconds
 
     def __init__(self, webcode: str) -> None:
         """

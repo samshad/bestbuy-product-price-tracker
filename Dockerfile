@@ -25,8 +25,8 @@ COPY requirements.txt .
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Install psycopg2
-RUN pip install psycopg2
+# Install psycopg2-binary for PostgreSQL
+RUN pip install psycopg2-binary
 
 # Install Playwright and its dependencies
 RUN playwright install && playwright install-deps

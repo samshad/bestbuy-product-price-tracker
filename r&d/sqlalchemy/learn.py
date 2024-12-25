@@ -1,13 +1,13 @@
 import os
 from typing import List, Optional
 
-from sqlalchemy import create_engine, Column, String, DateTime, Integer, ForeignKey
+from sqlalchemy import create_engine, Column, String, DateTime, Integer
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import sessionmaker, declarative_base
 from dotenv import load_dotenv
 
 from app.utils.my_logger import setup_logging
-from app.utils.datetime_handler import get_current_datetime, parse_datetime
+from app.utils.datetime_handler import get_current_datetime
 
 load_dotenv()
 

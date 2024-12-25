@@ -1,11 +1,10 @@
+import redis
 from flask import Flask, request, jsonify
 from time import sleep
 import celery
-import redis
 import psycopg2
 import uuid
 import json
-from datetime import datetime
 import os
 from dotenv import load_dotenv
 
@@ -13,8 +12,8 @@ from app.db.jobs_crud import JobsCRUD
 
 load_dotenv()
 
-# REDIS_HOST = os.environ.get("REDIS_HOST", "localhost")
-# REDIS_PORT = int(os.environ.get("REDIS_PORT", 6379))
+REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
+REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
 RABBITMQ_BROKER = os.environ.get(
     "RABBITMQ_BROKER", "amqp://guest:guest@localhost:5672//"
 )  # Update with your RabbitMQ URL
@@ -22,14 +21,18 @@ RABBITMQ_BROKER = os.environ.get(
 app = Flask(__name__)
 
 # Celery app setup
-celery_app = celery.Celery(__name__, broker=RABBITMQ_BROKER)
-# celery_app = celery.Celery(__name__, broker=RABBITMQ_BROKER, backend='redis://{}:{}'.format(REDIS_HOST, REDIS_PORT))
+# celery_app = celery.Celery(__name__, broker=RABBITMQ_BROKER)
+celery_app = celery.Celery(
+    __name__,
+    broker=RABBITMQ_BROKER,
+    backend="redis://{}:{}".format(REDIS_HOST, REDIS_PORT),
+)
 celery_app.conf.task_routes = {
     "tasks.*": {"queue": "scrape_queue"}
 }  # Route tasks to specific queues
 
 # Redis client
-# redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT)
+redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT)
 
 
 # Database connection function

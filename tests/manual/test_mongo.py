@@ -1,5 +1,4 @@
 from app.db.db_mongo import MongoDBClient
-from datetime import datetime
 
 mongo_client = MongoDBClient()
 

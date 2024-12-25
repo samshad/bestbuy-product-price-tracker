@@ -1,11 +1,9 @@
-from flask import Response
-
 from app.services.product_service import ProductService
-from app.utils.api_response import APIResponse
+
 
 def handle_existing_product(
     existing_product, new_product_details: dict, product_service: ProductService
-) -> Response:
+) -> tuple[int, str]:
     """
     Handle an existing product by updating it with new details if necessary.
 
@@ -15,7 +13,9 @@ def handle_existing_product(
         product_service (ProductService): Service layer for product operations.
 
     Returns:
-        Response: JSON response with a status message.
+        tuple[int, str]: Status code and response message.
     """
-    message, status_code = product_service.handle_existing_product(existing_product, new_product_details)
-    return APIResponse.build(status_code, {"message": message})
+    message, status_code = product_service.handle_existing_product(
+        existing_product, new_product_details
+    )
+    return status_code, message

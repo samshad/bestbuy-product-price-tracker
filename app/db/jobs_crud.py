@@ -57,19 +57,14 @@ class Jobs(Base):
 
     def to_dict(self) -> Dict[str, Any]:
         """
-        Convert the job record to a dictionary.
+        Convert the product object to a dictionary.
 
         Returns:
-            Dict[str, Any]: A dictionary representation of the job record.
+            Dict[str, Any]: A dictionary containing the product details.
         """
         return {
-            "job_id": self.job_id,
-            "webcode": self.webcode,
-            "status": self.status,
-            "result": self.result,
-            "product_id": self.product_id,
-            "created_at": self.created_at,
-            "updated_at": self.updated_at,
+            column.name: str(getattr(self, column.name))
+            for column_name, column in self.__table__.columns.items()
         }
 
 
@@ -86,6 +81,9 @@ class JobsCRUD:
         except SQLAlchemyError as e:
             logger.critical(f"Database connection error: {str(e)}", exc_info=True)
             raise e
+
+    def to_dict(self):
+        return {"engine": self.engine, "Session": self.Session}
 
     def _validate_parameters(self, parameters: Dict[str, Any]) -> bool:
         """
