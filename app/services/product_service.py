@@ -1,8 +1,10 @@
 from typing import Dict, Any, Tuple, List, Optional
-from datetime import datetime
+
+from app.db.products_crud import Products
 from app.services.scraper_service import ScraperService
 from app.services.product_processor import ProductProcessor
 from app.services.database_handler import DatabaseHandler
+from app.utils.datetime_handler import parse_datetime, get_current_datetime
 from app.utils.my_logger import setup_logging
 from app.utils.validate_input import validate_input_product_id_web_code
 
@@ -10,136 +12,167 @@ logger = setup_logging(__name__)
 
 
 class ProductService:
-    """High-level service for product operations."""
+    """High-level service for managing product operations."""
 
     def __init__(
         self,
         scraper_service: ScraperService,
         product_processor: ProductProcessor,
         database_handler: DatabaseHandler,
-    ):
+    ) -> None:
+        """
+        Initialize the ProductService with necessary dependencies.
+
+        Args:
+            scraper_service (ScraperService): Service to scrape product data.
+            product_processor (ProductProcessor): Service to process scraped product data.
+            database_handler (DatabaseHandler): Service to handle database operations.
+        """
         self.scraper_service = scraper_service
         self.product_processor = product_processor
         self.database_handler = database_handler
 
-    def scrape_and_process_product(self, webcode: str, url: str) -> Dict[str, Any]:
+    def scrape_and_process_product(self, webcode: str) -> Dict[str, Any]:
         """
-        Scrape and process product details.
+        Scrape product data from the given Webcode/URL and process it.
 
         Args:
-            webcode (str): The webcode of the product.
-            url (str): The URL of the product.
+            webcode (str): Unique webcode identifying the product.
 
         Returns:
-            Dict[str, Any]: The processed product details.
+            Dict[str, Any]: Processed product data.
+
+        Raises:
+            ValueError: If scraping fails or no data is returned.
         """
-        raw_data = self.scraper_service.scrape_product(webcode, url)
+        raw_data = self.scraper_service.scrape_product(webcode)
         if not raw_data:
-            raise ValueError("Failed to scrape product data. Check webcode or URL.")
+            logger.error(f"Failed to scrape data for webcode {webcode}.")
+            raise ValueError("Failed to scrape product data. Verify webcode or URL.")
         return self.product_processor.process_product_data(raw_data)
 
-    def handle_product(self, product_details: Dict[str, Any]) -> Tuple[str, int]:
+    def store_product(
+        self, product_details: Dict[str, Any]
+    ) -> Tuple[Optional[int], Tuple[str, int]]:
         """
-        Handle product storage logic.
+        Store product details in the database.
 
         Args:
-            product_details (Dict[str, Any]): The product details to store.
+            product_details (Dict[str, Any]): The product data to store.
 
         Returns:
-            Tuple[str, int]: A message and status code.
-        """
-        existing_product = self.database_handler.get_product(
-            web_code=product_details["web_code"]
-        )
-
-        if existing_product:
-            return self._handle_existing_product(product_details, existing_product[0])
-
-        self.database_handler.store_new_product(product_details)
-        return "Product data added to PostgreSQL and MongoDB.", 201
-
-    def _handle_existing_product(
-        self, product_details: Dict[str, Any], existing_product: Dict[str, Any]
-    ) -> Tuple[str, int]:
-        """
-        Handle logic for existing products.
-
-        Args:
-            product_details (Dict[str, Any]): The product details to store.
-            existing_product (Dict[str, Any]): The existing product details.
-
-        Returns:
-            Tuple[str, int]: A message and status code.
-        """
-        current_date = datetime.now().date()
-        stored_date = existing_product["date"].date()
-
-        if current_date == stored_date:
-            return "Product already exists for today. No action taken.", 200
-
-        self.database_handler.update_existing_product(product_details)
-        return "Product price updated and new data added to MongoDB.", 200
-
-    def get_all_products(self) -> List[Dict[str, Any]]:
-        """
-        Fetch all product details from the database.
-
-        Returns:
-            List[Dict[str, Any]]: A list of all product details.
+            Tuple[Optional[int], Tuple[str, int]]: Product ID and status message with HTTP code.
         """
         try:
-            products = self.database_handler.get_all_products()
-            return products
+            product_id, (message, status_code) = (
+                self.database_handler.store_new_product(product_details)
+            )
+            if product_id:
+                logger.info(f"Product {product_id} stored successfully.")
+                return product_id, (
+                    "Product data added to PostgreSQL and MongoDB.",
+                    201,
+                )
+            logger.error(f"Failed to store product. {message}")
+            return None, (message, status_code)
         except Exception as e:
-            logger.error(f"Error fetching all products: {str(e)}")
+            logger.error(f"Unexpected error storing product: {e}")
+            return None, ("Internal server error", 500)
+
+    def handle_existing_product(
+        self, existing_product: Products, new_product_details: Dict[str, Any]
+    ) -> Tuple[str, int]:
+        """
+        Update or skip processing for an existing product based on the last update date.
+
+        Args:
+            existing_product (Products): Existing product record from the database.
+            new_product_details (Dict[str, Any]): Newly scraped product details.
+
+        Returns:
+            Tuple[str, int]: Status message and HTTP code.
+        """
+        current_date = parse_datetime(get_current_datetime()).date()
+        stored_date = existing_product.updated_at.date()
+
+        new_product_details["product_id"] = existing_product.product_id
+
+        if existing_product.price != new_product_details["price"]:
+            self.database_handler.update_existing_product(new_product_details)
+            logger.info(
+                f"Product ID: {existing_product.product_id} updated successfully."
+            )
+            return "Product details updated.", 200
+
+        if current_date == stored_date:
+            logger.info(f"Product {existing_product.product_id} already updated today.")
+            return "Product already exists for today. No action taken.", 200
+
+        self.database_handler.update_existing_product(new_product_details)
+        logger.info(
+            f"Product {new_product_details['product_id']} updated successfully."
+        )
+        return "Product details updated.", 200
+
+    def get_all_products(self) -> List[Products]:
+        """
+        Retrieve all products from the database.
+
+        Returns:
+            List[Products]: A list of all product records.
+        """
+        try:
+            return self.database_handler.get_all_products()
+        except Exception as e:
+            logger.error(f"Error fetching all products: {e}")
             return []
 
     def get_product_prices(self, web_code: str) -> List[Dict[str, Any]]:
         """
-        Fetch all price details for a product from the database.
+        Retrieve all price details for a product by its web code.
 
         Args:
-            web_code (str): The webcode of the product.
+            web_code (str): Webcode identifying the product.
 
         Returns:
-            List[Dict[str, Any]]: A list of all price details for the product.
+            List[Dict[str, Any]]: Price history for the product.
         """
         try:
-            prices = self.database_handler.get_product_prices(web_code)
-            return prices
+            return self.database_handler.get_product_prices(web_code)
         except Exception as e:
-            logger.error(f"Error fetching product prices: {str(e)}")
+            logger.error(f"Error fetching prices for webcode {web_code}: {e}")
             return []
 
     def get_product(
         self, product_id: Optional[int] = None, web_code: Optional[str] = None
-    ) -> Dict[str, Any]:
+    ) -> Optional[Products]:
         """
-        Retrieve product by id or web code from the database.
+        Retrieve a product by its ID or web code.
 
         Args:
-            product_id (Optional[int]): The id of the product
-            web_code (Optional[str]): The web code of the product
+            product_id (Optional[int]): ID of the product to fetch.
+            web_code (Optional[str]): Web code of the product to fetch.
 
         Returns:
-            Dict[str, Any]: A dict of product record.
+            Optional[Products]: Product record or None if not found.
+
+        Raises:
+            ValueError: If both `product_id` and `web_code` are missing or invalid.
         """
-        # Validate input to ensure either 'web_code' or 'product_id' is provided, but not both.
         if not validate_input_product_id_web_code(
             product_id=product_id, web_code=web_code
         ):
             logger.error(
-                "Either 'product_id' or 'web_code' must be provided, but not both."
+                "Invalid input: Provide either 'product_id' or 'web_code', not both."
             )
-            return {}
+            return None
 
         try:
-            if product_id:
-                product = self.database_handler.get_product(product_id=product_id)
-                return product[0] if product else {}
-            elif web_code:
-                product = self.database_handler.get_product(web_code=web_code)
-                return product[0] if product else {}
+            return self.database_handler.get_product(
+                product_id=product_id, web_code=web_code
+            )
         except Exception as e:
-            logger.error(f"Error fetching existing product: {str(e)}")
-            return {}
+            logger.error(
+                f"Error fetching product by ID {product_id} or web code {web_code}: {e}"
+            )
+            return None

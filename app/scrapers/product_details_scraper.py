@@ -1,7 +1,6 @@
 import time
 from typing import Optional
-from datetime import datetime
-from zoneinfo import ZoneInfo
+from app.utils.datetime_handler import get_current_datetime
 
 from playwright.sync_api import (
     sync_playwright,
@@ -11,7 +10,6 @@ from playwright.sync_api import (
 from bs4 import BeautifulSoup, Tag
 
 from app.utils.my_logger import setup_logging
-from app.utils.validate_input import validate_input_web_code_url
 
 logger = setup_logging(__name__)
 
@@ -21,21 +19,18 @@ class ProductDetailsScraper:
 
     DEFAULT_TIMEOUT = 40000  # 40 seconds
 
-    def __init__(self, webcode: str = None, url: str = None) -> None:
+    def __init__(self, webcode: str) -> None:
         """
         Initialize the ProductDetailsScraper.
 
         Args:
             webcode (str): Product web code to search on Best Buy.
-            url (str): Direct product page URL.
         """
-        if not validate_input_web_code_url(webcode, url):
-            raise ValueError(
-                "Either 'webcode' or 'url' must be provided, but not both."
-            )
+        self.url = None
+        if not webcode:
+            raise ValueError("Product 'webcode' must be provided.")
 
         self.webcode = webcode
-        self.url = url
         self.search_url = (
             f"https://www.bestbuy.ca/en-ca/search?search={webcode}" if webcode else None
         )  # search url not allowed by robots.txt
@@ -83,10 +78,10 @@ class ProductDetailsScraper:
             )
             .replace("SAVE $", "")
             .strip(),
-            "date": datetime.now(ZoneInfo("Canada/Atlantic")).isoformat(),
+            "date": get_current_datetime(),
         }
 
-    def scrape(self, timeout: int = DEFAULT_TIMEOUT) -> dict | None:
+    def scrape(self, timeout: int = DEFAULT_TIMEOUT) -> Optional[dict]:
         """
         Scrape product details from Best Buy Canada.
 
@@ -94,8 +89,7 @@ class ProductDetailsScraper:
             timeout (int): Maximum time in milliseconds to wait for page elements.
 
         Returns:
-            dict: A dictionary of the scraped product details if successful.
-            None: If the product cannot be found or an invalid webcode/URL is provided.
+            Optional[dict]: The product details if successfully scraped, else None.
         """
         try:
             with sync_playwright() as p:
@@ -187,8 +181,7 @@ class ProductDetailsScraper:
 
 
 if __name__ == "__main__":
-    scraper = ProductDetailsScraper(webcode="17699676")
-    # scraper = ProductDetailsScraper(url="https://www.bestbuy.ca/en-ca/product/170765210")
+    scraper = ProductDetailsScraper(webcode="16004258")
 
     product_details = scraper.scrape()
     if product_details is None:

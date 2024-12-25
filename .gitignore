@@ -161,7 +161,9 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 .idea/
 logs/
-tests/
+redis_data/
+rabbitmq_data/
+dummy_tester/
 
 00.py
 tmp.py

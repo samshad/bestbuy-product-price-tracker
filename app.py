@@ -3,12 +3,14 @@ from dotenv import load_dotenv
 from flask import Flask
 from flask_cors import CORS
 
+from app.services.job_service import JobService
 from app.services.product_service import ProductService
 from app.services.scraper_service import ScraperService
 from app.services.product_processor import ProductProcessor
 from app.services.database_handler import DatabaseHandler
+from app.db.products_crud import ProductsCRUD
+from app.db.jobs_crud import JobsCRUD
 from app.utils.config import Config
-from app.db.db_postgres import PostgresDBClient
 from app.db.db_mongo import MongoDBClient
 from app.utils.data_cleaner import DataCleaner
 from app.routes import register_routes
@@ -26,12 +28,14 @@ def create_app() -> Flask:
     app = Flask(__name__)
 
     # Initialize services and utilities
-    postgres_client = PostgresDBClient()
+    jobs_crud = JobsCRUD()
+    product_client = ProductsCRUD()
     mongo_client = MongoDBClient()
     data_cleaner = DataCleaner()
     scraper_service = ScraperService()
     product_processor = ProductProcessor(data_cleaner)
-    database_handler = DatabaseHandler(postgres_client, mongo_client)
+    database_handler = DatabaseHandler(jobs_crud, product_client, mongo_client)
+    job_service = JobService(database_handler)
 
     # Configure CORS
     if not Config.ALLOWED_ORIGINS:
@@ -63,7 +67,7 @@ def create_app() -> Flask:
         raise
 
     # Register routes
-    register_routes(app, product_service)
+    register_routes(app, job_service, product_service, database_handler)
 
     return app
 

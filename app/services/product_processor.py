@@ -6,11 +6,14 @@ class ProductProcessor:
     """Service for processing and cleaning product data."""
 
     def __init__(self, data_cleaner: DataCleaner):
+        """
+        Initialize the ProductProcessor with the given data cleaner.
+        """
         self.data_cleaner = data_cleaner
 
     def process_product_data(self, raw_data: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Process raw product data into the required format.
+        Process and clean the raw product data.
 
         Args:
             raw_data (Dict[str, Any]): Raw scraped product data.
@@ -25,5 +28,13 @@ class ProductProcessor:
 
     @staticmethod
     def _convert_to_cents(amount: float) -> int:
-        """Convert dollar amount to cents."""
+        """
+        Convert the given amount to cents.
+
+        Args:
+            amount (float): The amount to convert.
+
+        Returns:
+            int: The amount in cents.
+        """
         return int(float(amount) * 100)
