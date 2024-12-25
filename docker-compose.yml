@@ -10,8 +10,8 @@ services:
     ports:
       - "${EXPOSE_PORT:-5000}:${EXPOSE_PORT:-5000}" # Default to 5000 if EXPOSE_PORT is not set
     depends_on:
-      - redis
       - rabbitmq
+      - redis
     environment:
       - REDIS_HOST=${REDIS_HOST:-redis}     # Default to 'redis' if REDIS_HOST is not set
       - RABBITMQ_BROKER=${RABBITMQ_BROKER:-amqp://guest:guest@rabbitmq:5672//} # Default to 'amqp://guest:guest@rabbitmq:5672//' if RABBITMQ_BROKER is not set
@@ -21,6 +21,18 @@ services:
       - .env                              # Load environment variables from the .env file
     volumes:
       - ./logs:/app/logs
+
+  worker:
+    build:
+      context: .
+    command: celery -A app.tasks.celery_tasks.celery_app worker -l info -Q scrape_queue
+    depends_on:
+      - web
+      - rabbitmq
+      - redis
+#    environment:
+#      - REDIS_HOST=redis
+#      - RABBITMQ_BROKER=amqp://guest:guest@rabbitmq:5672//
 
   rabbitmq:
     image: "rabbitmq:3-management"

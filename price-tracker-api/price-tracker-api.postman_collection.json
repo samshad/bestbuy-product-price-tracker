@@ -101,6 +101,29 @@
 			"response": []
 		},
 		{
+			"name": "Job",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/job?job_id=bdcc7e30-2b3d-4ff5-9ec8-1fdc294ec8fd",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"job"
+					],
+					"query": [
+						{
+							"key": "job_id",
+							"value": "bdcc7e30-2b3d-4ff5-9ec8-1fdc294ec8fd"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "products",
 			"request": {
 				"method": "GET",

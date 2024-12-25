@@ -63,15 +63,8 @@ class Products(Base):
             Dict[str, Any]: A dictionary containing the product details.
         """
         return {
-            "product_id": self.product_id,
-            "web_code": self.web_code,
-            "title": self.title,
-            "model": self.model,
-            "url": self.url,
-            "price": self.price,
-            "save": self.save,
-            "created_at": self.created_at.isoformat(),
-            "updated_at": self.updated_at.isoformat(),
+            column.name: str(getattr(self, column.name))
+            for column_name, column in self.__table__.columns.items()
         }
 
 
@@ -148,81 +141,27 @@ class ProductsCRUD:
             logger.error(f"Error retrieving products: {str(e)}", exc_info=True)
             return []
 
-    # def get_all_products(self, offset: int = 0, limit: int = 10) -> List[Products]:
-    #     """
-    #     Retrieve all products with pagination.
-    #
-    #     Args:
-    #         offset (int): Starting point of records to fetch.
-    #         limit (int): Number of records to fetch.
-    #
-    #     Returns:
-    #         List[Products]: A paginated list of product records.
-    #     """
-    #     try:
-    #         with self.Session() as session:
-    #             products = session.query(Products).offset(offset).limit(limit).all()
-    #             logger.info("Products retrieved successfully with pagination.")
-    #             return products
-    #     except SQLAlchemyError as e:
-    #         logger.error(f"Error retrieving products: {str(e)}", exc_info=True)
-    #         return []
-    #
-    # def get_product_by_id(self, product_id: int) -> Optional[Products]:
-    #     """
-    #     Retrieve a product by its ID.
-    #
-    #     Args:
-    #         product_id (int): The ID of the product to retrieve.
-    #
-    #     Returns:
-    #         Optional[Products]: The product object if found, None otherwise.
-    #     """
-    #     try:
-    #         with self.Session() as session:
-    #             product = (
-    #                 session.query(Products)
-    #                 .filter(Products.product_id == product_id)
-    #                 .first()
-    #             )
-    #             if product:
-    #                 logger.info(
-    #                     f"Product product_id: {product_id} retrieved successfully."
-    #                 )
-    #             else:
-    #                 logger.warning(f"Product product_id: {product_id} not found.")
-    #             return product
-    #     except SQLAlchemyError as e:
-    #         logger.error(
-    #             f"Error retrieving product_id {product_id}: {str(e)}", exc_info=True
-    #         )
-    #         return None
-    #
-    # def get_product_by_web_code(self, web_code: str) -> Optional[Products]:
-    #     """
-    #     Retrieve a product by its web code.
-    #
-    #     Args:
-    #         web_code (str): The web code of the product to retrieve.
-    #
-    #     Returns:
-    #         Optional[Products]: The product object if found, None otherwise.
-    #     """
-    #     try:
-    #         with self.Session() as session:
-    #             product = (
-    #                 session.query(Products)
-    #                 .filter(Products.web_code == web_code)
-    #                 .first()
-    #             )
-    #             if product:
-    #                 logger.info(f"Product web_code: {web_code} retrieved successfully.")
-    #             else:
-    #                 logger.warning(f"Product web_code: {web_code} not found.")
-    #             return product
-    #     except SQLAlchemyError as e:
-    #         logger.error(f"Error retrieving product web_code {web_code}: {str(e)}", exc_info=True)
-    #         return None
+    def get_all_products_pagination(
+        self, offset: int = 0, limit: int = 10
+    ) -> List[Products]:
+        """
+        Retrieve all products with pagination.
+
+        Args:
+            offset (int): Starting point of records to fetch.
+            limit (int): Number of records to fetch.
+
+        Returns:
+            List[Products]: A paginated list of product records.
+        """
+        try:
+            with self.Session() as session:
+                products = session.query(Products).offset(offset).limit(limit).all()
+                logger.info("Products retrieved successfully with pagination.")
+                return products
+        except SQLAlchemyError as e:
+            logger.error(f"Error retrieving products: {str(e)}", exc_info=True)
+            return []
 
     def get_product(
         self, product_id: Optional[int] = None, web_code: Optional[str] = None

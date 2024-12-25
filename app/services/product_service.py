@@ -92,7 +92,6 @@ class ProductService:
         Returns:
             Tuple[str, int]: Status message and HTTP code.
         """
-
         current_date = parse_datetime(get_current_datetime()).date()
         stored_date = existing_product.updated_at.date()
 

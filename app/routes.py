@@ -1,24 +1,31 @@
 from flask import request, Response, Flask
 
-from app.services.helpers.existing_product_helpers import handle_existing_product
-from app.services.helpers.scraping_helpers import scrape_product_details
-from app.services.helpers.store_new_product_details_helpers import store_new_product
 from app.utils.datetime_handler import get_current_datetime
 from app.services.product_service import ProductService
+from app.services.database_handler import DatabaseHandler
+from app.services.job_service import JobService
 from app.utils.api_response import APIResponse
 from app.utils.my_logger import setup_logging
 from app.utils.validate_input import validate_input_product_id_web_code
+from app.tasks.celery_tasks import scrape_task
 
 logger = setup_logging(__name__)
 
 
-def register_routes(app: Flask, product_service: ProductService) -> None:
+def register_routes(
+    app: Flask,
+    job_service: JobService,
+    product_service: ProductService,
+    database_handler: DatabaseHandler,
+) -> None:
     """
     Register all routes for the Flask app.
 
     Args:
         app (Flask): Flask application instance.
+        job_service (JobService): Service layer for handling job-related logic.
         product_service (ProductService): Service layer for handling product-related logic.
+        database_handler (DatabaseHandler): Service for handling database operations.
     """
 
     @app.route("/health", methods=["GET"])
@@ -34,49 +41,65 @@ def register_routes(app: Flask, product_service: ProductService) -> None:
         return APIResponse.build(200, {"status": "healthy", "time": time_now})
 
     @app.route("/scrape", methods=["POST"])
-    def scrape_and_store_product_details() -> Response:
-        """
-        Scrape and store product data based on web_code.
+    def scrape():
+        """Endpoint to initiate a scraping job."""
+        payload = request.json
+        web_code = payload.get("web_code") if payload else None
 
-        Payload:
-            {
-                "web_code": "string"
-            }
+        if not web_code:
+            return APIResponse.build(400, {"error": "web_code is required"})
+
+        status = "Pending"
+
+        job_data = {
+            "job_id": None,
+            "web_code": str(web_code),
+            "status": status,
+            "result": None,
+            "product_id": None,
+        }
+
+        logger.info(f"before celery task: {job_data}")
+
+        task = scrape_task.delay(job_data)
+
+        job_data["job_id"] = task.id
+
+        status_code, message = job_service.store_job(
+            job_data
+        )  # database_handler.store_job(job_data)
+        logger.info(
+            f"Job stored in database -> Job_ID: {job_data['job_id']}, Status: {status_code}, Message: {message}"
+        )
+
+        return APIResponse.build(200, {"task_id": task.id})
+
+    @app.route("/job", methods=["GET"])
+    def get_job_details() -> Response:
+        """
+        Fetch job details by job_id.
+
+        Query Params:
+            job_id (str): Job ID.
 
         Returns:
-            Response: JSON response containing product details or error message.
+            Response: JSON response containing job details or error message.
         """
+        job_id = request.args.get("job_id")
+        if not job_id:
+            logger.error("Missing query parameter: 'job_id'.")
+            return APIResponse.build(400, {"error": "'job_id' is required."})
+
         try:
-            payload = request.json
-            web_code = payload.get("web_code") if payload else None
+            job = job_service.get_job(job_id)
+            if not job:
+                logger.info(f"No job found for job_id: {job_id}")
+                return APIResponse.build(404, {"message": "No job found."})
 
-            if not web_code:
-                logger.error("Missing 'web_code' in request payload.")
-                return APIResponse.build(400, {"error": "'web_code' is required."})
-
-            existing_product = product_service.get_product(None, web_code)
-
-            # Scrape product details
-            product_details = scrape_product_details(web_code, product_service)
-            if not product_details:
-                return APIResponse.build(
-                    404, {"message": "Scraping failed. No product details found."}
-                )
-
-            # Handle existing product
-            if existing_product:
-                return handle_existing_product(
-                    existing_product, product_details, product_service
-                )
-
-            # Store new product
-            return store_new_product(product_details, product_service)
-
-        except (KeyError, ValueError) as e:
-            logger.error(f"Input error: {str(e)}")
-            return APIResponse.build(400, {"error": str(e)})
-        except Exception:
-            logger.exception("Unexpected error occurred.")
+            logger.info(f"Retrieved job details for job_id: {job_id}")
+            return APIResponse.build(200, {"job": job})
+        except Exception as e:
+            logger.exception(f"Error fetching job details. Error: {str(e)}")
             return APIResponse.build(500, {"error": "An unexpected error occurred."})
 
     @app.route("/products", methods=["GET"])

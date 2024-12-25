@@ -163,6 +163,7 @@ cython_debug/
 logs/
 redis_data/
 rabbitmq_data/
+dummy_tester/
 
 00.py
 tmp.py

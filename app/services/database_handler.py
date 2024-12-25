@@ -1,6 +1,7 @@
 from typing import Dict, Any, Optional, List, Tuple
 
 from app.db.db_mongo import MongoDBClient
+from app.db.jobs_crud import JobsCRUD, Jobs
 from app.db.products_crud import ProductsCRUD, Products
 from app.utils.datetime_handler import get_current_datetime
 from app.utils.my_logger import setup_logging
@@ -13,14 +14,21 @@ logger = setup_logging(__name__)
 class DatabaseHandler:
     """Service for handling database operations across PostgreSQL and MongoDB."""
 
-    def __init__(self, product_client: ProductsCRUD, mongo_client: MongoDBClient):
+    def __init__(
+        self,
+        job_client: JobsCRUD,
+        product_client: ProductsCRUD,
+        mongo_client: MongoDBClient,
+    ):
         """
         Initialize the DatabaseHandler.
 
         Args:
+            job_client (JobsCRUD): Instance for PostgreSQL job operations.
             product_client (ProductsCRUD): Instance for PostgreSQL operations.
             mongo_client (MongoDBClient): Instance for MongoDB operations.
         """
+        self.job_client = job_client
         self.product_client = product_client
         self.mongo_client = mongo_client
         logger.info("DatabaseHandler initialized. Product and MongoDB clients are set.")
@@ -118,6 +126,53 @@ class DatabaseHandler:
         logger.info(f"{len(products)} products retrieved from Products.")
         return products
 
+    def fetch_all_products_with_pagination(
+        self, offset: int = 0, limit: int = 5
+    ) -> List[Products]:
+        """
+        Fetch all products using pagination.
+
+        Args:
+            offset (int): Starting point of records to fetch.
+            limit (int): Number of records to fetch.
+
+        Returns:
+            List[Products]: A list of all product records.
+        """
+        all_products = []
+        while True:
+            try:
+                products = self.product_client.get_all_products_pagination(
+                    offset, limit
+                )
+                if not products:
+                    break
+                all_products.extend(products)
+                offset += limit
+            except Exception as e:
+                logger.error(f"Error retrieving products: {str(e)}", exc_info=True)
+                break
+        return all_products
+
+    def fetch_products_pagination(
+        self, offset: int = 0, limit: int = 5
+    ) -> List[Products]:
+        """
+        Fetch products using pagination.
+
+        Args:
+            offset (int): Starting point of records to fetch.
+            limit (int): Number of records to fetch.
+
+        Returns:
+            List[Products]: A list of product records.
+        """
+        products = self.product_client.get_all_products_pagination(offset, limit)
+        logger.info(
+            f"{len(products)} products retrieved from Products. Offset: {offset}, Limit: {limit}"
+        )
+        return products
+
     def get_product_prices(self, web_code: str) -> List[Dict[str, Any]]:
         """
         Retrieve historical prices for a product from MongoDB.
@@ -162,3 +217,74 @@ class DatabaseHandler:
         else:
             logger.warning("Product not found.")
         return product
+
+    def store_job(self, job_details: Dict[str, Any]) -> tuple[int, str]:
+        """
+        Store job details in the database.
+
+        Args:
+            job_details (Dict[str, Any]): The job data to store.
+
+        Returns:
+            Tuple[int, str]: Status and message.
+        """
+
+        job_id = job_details["job_id"]
+        webcode = job_details["web_code"]
+        status = job_details["status"]
+        result = job_details["result"]
+        product_id = job_details["product_id"]
+
+        try:
+            flag = self.job_client.insert_job(
+                job_id, webcode, status, result, product_id
+            )
+            if flag:
+                logger.info(f"Job stored in PostgreSQL with ID: {job_id}.")
+                return 200, "Job data stored successfully."
+            else:
+                logger.error(f"Failed to store job data in database. Job ID: {job_id}")
+                return 500, "Failed to store job data in database."
+        except Exception as e:
+            logger.error(f"Failed to store job data: {str(e)}")
+            return 500, "Failed to store job data in database."
+
+    def update_job(self, job_id: str, updates: Dict[str, Any]) -> bool:
+        """
+        Update job details in the database.
+
+        Args:
+            job_id (str): The job ID to update.
+            updates (Dict[str, Any]): The data to update.
+
+        Returns:
+            bool: True if the job was updated successfully, False otherwise.
+        """
+        try:
+            flag = self.job_client.update_job(job_id, updates)
+            if flag:
+                logger.info(f"Job {job_id} updated successfully.")
+                return True
+            else:
+                logger.error(f"Failed to update job {job_id}.")
+                return False
+        except Exception as e:
+            logger.error(f"Error updating job {job_id}: {str(e)}")
+            return False
+
+    def get_job_by_id(self, job_id: str) -> Optional[Jobs]:
+        """
+        Retrieve a job by its ID.
+
+        Args:
+            job_id (str): The ID of the job.
+
+        Returns:
+            Optional[Jobs]: Job record if found.
+        """
+        job = self.job_client.get_job_by_id(job_id)
+        if job:
+            logger.info(f"Job retrieved. Job ID: {job.job_id}")
+        else:
+            logger.warning("Job not found.")
+        return job
