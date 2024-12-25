@@ -9,7 +9,7 @@ from playwright.sync_api import (
 )
 from bs4 import BeautifulSoup, Tag
 
-from app.utils.my_logger import setup_logging
+from app.utils.logging_utils import setup_logging
 
 logger = setup_logging(__name__)
 

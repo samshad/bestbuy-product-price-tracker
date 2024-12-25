@@ -14,7 +14,7 @@ from app.utils.config import Config
 from app.db.db_mongo import MongoDBClient
 from app.utils.data_cleaner import DataCleaner
 from app.routes import register_routes
-from app.utils.my_logger import setup_logging
+from app.utils.logging_utils import setup_logging
 
 logger = setup_logging(__name__)
 

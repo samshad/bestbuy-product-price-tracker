@@ -5,7 +5,7 @@ from app.services.scraper_service import ScraperService
 from app.services.product_processor import ProductProcessor
 from app.services.database_handler import DatabaseHandler
 from app.utils.datetime_handler import parse_datetime, get_current_datetime
-from app.utils.my_logger import setup_logging
+from app.utils.logging_utils import setup_logging
 from app.utils.validate_input import validate_input_product_id_web_code
 
 logger = setup_logging(__name__)

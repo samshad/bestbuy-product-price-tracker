@@ -1,7 +1,7 @@
 from typing import Dict, Any
 
 from app.services.database_handler import DatabaseHandler
-from app.utils.my_logger import setup_logging
+from app.utils.logging_utils import setup_logging
 
 logger = setup_logging(__name__)
 

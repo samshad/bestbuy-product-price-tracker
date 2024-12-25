@@ -5,7 +5,7 @@ from app.services.product_service import ProductService
 from app.services.database_handler import DatabaseHandler
 from app.services.job_service import JobService
 from app.utils.api_response import APIResponse
-from app.utils.my_logger import setup_logging
+from app.utils.logging_utils import setup_logging
 from app.utils.validate_input import validate_input_product_id_web_code
 from app.tasks.celery_tasks import scrape_task
 

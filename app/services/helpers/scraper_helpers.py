@@ -1,5 +1,5 @@
 from app.services.product_service import ProductService
-from app.utils.my_logger import setup_logging
+from app.utils.logging_utils import setup_logging
 
 logger = setup_logging(__name__)
 

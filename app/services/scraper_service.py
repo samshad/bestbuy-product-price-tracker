@@ -1,6 +1,6 @@
 from typing import Dict, Any, Optional
-from app.scrapers.scrapers import ScraperFactory
-from app.utils.my_logger import setup_logging
+from app.scraping.scraper_manager import ScraperFactory
+from app.utils.logging_utils import setup_logging
 
 logger = setup_logging(__name__)
 

@@ -3,7 +3,7 @@ from typing import Optional, Dict, Any, List
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure, PyMongoError
 from dotenv import load_dotenv
-from app.utils.my_logger import setup_logging
+from app.utils.logging_utils import setup_logging
 
 # Load environment variables from .env file
 load_dotenv()

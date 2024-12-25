@@ -4,9 +4,9 @@ from typing import Dict, Any, Tuple
 from app.utils.data_cleaner import DataCleaner
 from app.db.db_mongo import MongoDBClient
 from app.db.db_postgres import PostgresDBClient
-from app.scrapers.scrapers import ScraperFactory
+from app.scraping.scraper_manager import ScraperFactory
 from app.utils.config import Config
-from app.utils.my_logger import setup_logging
+from app.utils.logging_utils import setup_logging
 
 logger = setup_logging(__name__)
 

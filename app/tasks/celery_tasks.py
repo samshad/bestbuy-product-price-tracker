@@ -8,15 +8,15 @@ from app.db.db_mongo import MongoDBClient
 from app.db.jobs_crud import JobsCRUD
 from app.db.products_crud import ProductsCRUD
 from app.services.database_handler import DatabaseHandler
-from app.services.helpers.existing_product_helpers import handle_existing_product
-from app.services.helpers.scraping_helpers import scrape_product_details
-from app.services.helpers.store_new_product_details_helpers import store_new_product
+from app.services.helpers.product_update_helpers import handle_existing_product
+from app.services.helpers.scraper_helpers import scrape_product_details
+from app.services.helpers.store_product_helpers import store_new_product
 from app.services.job_service import JobService
 from app.services.product_service import ProductService
 from app.services.scraper_service import ScraperService
 from app.services.product_processor import ProductProcessor
 from app.utils.data_cleaner import DataCleaner
-from app.utils.my_logger import setup_logging
+from app.utils.logging_utils import setup_logging
 from app.utils.retry_with_backoff import retry_with_backoff
 
 load_dotenv()

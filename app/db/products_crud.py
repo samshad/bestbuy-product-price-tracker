@@ -6,7 +6,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import sessionmaker, declarative_base
 from dotenv import load_dotenv
 
-from app.utils.my_logger import setup_logging
+from app.utils.logging_utils import setup_logging
 from app.utils.datetime_handler import get_current_datetime
 from app.utils.validate_input import validate_input_product_id_web_code
 
