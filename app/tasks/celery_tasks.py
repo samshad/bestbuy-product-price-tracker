@@ -1,9 +1,7 @@
 from typing import Optional
 from celery import Celery
 import json
-import os
-from dotenv import load_dotenv
-
+from app.utils.config import Config
 from app.db.db_mongo import MongoDBClient
 from app.db.jobs_crud import JobsCRUD
 from app.db.products_crud import ProductsCRUD
@@ -17,13 +15,12 @@ from app.utils.data_cleaner import DataCleaner
 from app.utils.logging_utils import setup_logging
 from app.utils.retry_with_backoff import retry_with_backoff
 
-load_dotenv()
 logger = setup_logging(__name__)
 
-REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
-REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
+REDIS_HOST = Config.REDIS_HOST
+REDIS_PORT = Config.REDIS_PORT
 CELERY_BACKEND = f"redis://{REDIS_HOST}:{REDIS_PORT}"
-RABBITMQ_BROKER = os.getenv("RABBITMQ_BROKER", "amqp://guest:guest@localhost:5672//")
+RABBITMQ_BROKER = Config.RABBITMQ_BROKER
 
 celery_app = Celery(__name__, broker=RABBITMQ_BROKER, backend=CELERY_BACKEND)
 celery_app.conf.task_routes = {"tasks.*": {"queue": "scrape_queue"}}

@@ -63,5 +63,7 @@ class ProductProcessor:
         try:
             return int(float(amount) * 100)
         except (TypeError, ValueError):
-            logger.error(f"Invalid amount for conversion to cents: {amount}")
+            logger.error(
+                f"Invalid amount for conversion to cents: {amount}", exc_info=True
+            )
             raise ValueError(f"Invalid amount for conversion to cents: {amount}")

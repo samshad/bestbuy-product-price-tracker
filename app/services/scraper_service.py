@@ -26,12 +26,16 @@ class ScraperService:
             scraper = ScraperFactory.create_scraper(webcode)
 
             if not scraper:
-                logger.error(f"No suitable scraper found for webcode: {webcode}")
+                logger.error(
+                    f"No suitable scraper found for webcode: {webcode}", exc_info=True
+                )
                 return None
 
             product_details = scraper.scrape()
             if not product_details:
-                logger.warning(f"Scraper returned no data for webcode: {webcode}")
+                logger.warning(
+                    f"Scraper returned no data for webcode: {webcode}", exc_info=True
+                )
                 return None
 
             logger.info(f"Successfully scraped product data: {product_details}")

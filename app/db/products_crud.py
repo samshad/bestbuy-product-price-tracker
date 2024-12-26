@@ -1,23 +1,19 @@
-import os
-from typing import List, Optional, Any, Dict
+from typing import Optional, Any, Dict
 
 from sqlalchemy import create_engine, Column, String, DateTime, Integer
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import sessionmaker, declarative_base
-from dotenv import load_dotenv
 
 from app.utils.logging_utils import setup_logging
 from app.utils.datetime_handler import get_current_datetime
 from app.utils.validate_input import validate_input_product_id_web_code
-
-# Load environment variables
-load_dotenv()
+from app.utils.config import Config
 
 # Initialize logger
 logger = setup_logging(__name__)
 
 # Database configuration
-POSTGRES_URI = os.getenv("POSTGRES_URI")
+POSTGRES_URI = Config.POSTGRES_URI
 if not POSTGRES_URI:
     logger.critical("POSTGRES_URI is not set in the environment variables.")
     raise ValueError("POSTGRES_URI must be set as an environment variable.")
@@ -125,7 +121,7 @@ class ProductsCRUD:
             logger.error(f"Error inserting product: {str(e)}", exc_info=True)
             return None
 
-    def get_all_products(self) -> List[Products]:
+    def get_all_products(self) -> list:
         """
         Retrieve all products from the database.
 
@@ -141,9 +137,7 @@ class ProductsCRUD:
             logger.error(f"Error retrieving products: {str(e)}", exc_info=True)
             return []
 
-    def get_all_products_pagination(
-        self, offset: int = 0, limit: int = 10
-    ) -> List[Products]:
+    def get_all_products_pagination(self, offset: int = 0, limit: int = 10) -> list:
         """
         Retrieve all products with pagination.
 
@@ -285,12 +279,4 @@ class ProductsCRUD:
 
 
 if __name__ == "__main__":
-    products_crud = ProductsCRUD()
-
-    # Sample data
-    web_code = "1234562342342"
-    title = "Example Product"
-    model = "Model XYZ"
-    url = "https://example.com/product"
-    price = 10022
-    save = 201
+    logger.info("JobsCRUD module loaded successfully.")

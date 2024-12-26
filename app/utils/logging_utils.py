@@ -3,11 +3,14 @@ from logging.handlers import TimedRotatingFileHandler
 import os
 import json
 from typing import List, Optional
+
+from app.utils.config import Config
 from app.utils.datetime_handler import parse_datetime, get_current_datetime
 
 
 class JSONFormatter(logging.Formatter):
     """Custom logging formatter to output logs in JSON format."""
+
     def format(self, record):
         log_record = {
             "timestamp": get_current_datetime(),
@@ -35,7 +38,7 @@ def create_file_handler(log_directory: str, level: int) -> TimedRotatingFileHand
 
     log_file_name = os.path.join(
         log_directory,
-        f"{parse_datetime(get_current_datetime()).strftime('%d-%m-%Y')}.log"
+        f"{parse_datetime(get_current_datetime()).strftime('%d-%m-%Y')}.log",
     )
     file_handler = TimedRotatingFileHandler(
         log_file_name, when="midnight", interval=1, encoding="utf-8"
@@ -107,7 +110,7 @@ def setup_logging(name: str) -> logging.Logger:
     Returns:
         logging.Logger: Configured logger instance.
     """
-    log_directory = os.getenv("LOG_DIRECTORY")
+    log_directory = Config.LOG_DIRECTORY
 
     # Create default handlers
     file_handler = create_file_handler(log_directory, level=logging.INFO)
