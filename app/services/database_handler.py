@@ -1,5 +1,4 @@
 from typing import Dict, Any, Optional, List, Tuple
-
 from app.db.db_mongo import MongoDBClient
 from app.db.jobs_crud import JobsCRUD, Jobs
 from app.db.products_crud import ProductsCRUD, Products
@@ -9,6 +8,10 @@ from app.utils.serialization_utils import serialize_mongo_data
 from app.utils.validate_input import validate_input_product_id_web_code
 
 logger = setup_logging(__name__)
+
+# Constants for HTTP status codes
+STATUS_OK = 200
+STATUS_ERROR = 500
 
 
 class DatabaseHandler:
@@ -31,7 +34,7 @@ class DatabaseHandler:
         self.job_client = job_client
         self.product_client = product_client
         self.mongo_client = mongo_client
-        logger.info("DatabaseHandler initialized. Product and MongoDB clients are set.")
+        logger.info("DatabaseHandler initialized with PostgreSQL and MongoDB clients.")
 
     def store_new_product(
         self, product_details: Dict[str, Any]
@@ -55,7 +58,6 @@ class DatabaseHandler:
                 product_details["price"],
                 product_details["save"],
             )
-
             product_id = response["product_id"]
             logger.info(f"Product stored in PostgreSQL with ID: {product_id}.")
 
@@ -63,10 +65,10 @@ class DatabaseHandler:
             self._store_in_mongo(product_details)
             logger.info("Product data successfully stored in MongoDB.")
 
-            return product_id, (None, 200)
+            return product_id, (None, STATUS_OK)
         except KeyError as e:
             logger.error(f"Missing required key in product details: {e}")
-            return None, ("Failed to store product data in databases.", 500)
+            return None, ("Failed to store product data.", STATUS_ERROR)
 
     def update_existing_product(self, product_details: Dict[str, Any]) -> None:
         """
@@ -76,7 +78,6 @@ class DatabaseHandler:
             product_details (Dict[str, Any]): Updated product details.
         """
         try:
-            # Update PostgreSQL product data
             updates = {
                 "price": product_details["price"],
                 "save": product_details["save"],
@@ -86,7 +87,6 @@ class DatabaseHandler:
                 f"Product ID {product_details['product_id']} updated in PostgreSQL."
             )
 
-            # Update MongoDB with new product data
             self._store_in_mongo(product_details)
             logger.info("Product data updated in MongoDB.")
         except KeyError as e:
@@ -109,7 +109,7 @@ class DatabaseHandler:
             }
             self.mongo_client.insert_data(mongo_data)
             logger.debug(
-                f"MongoDB insert successful for webcode: {mongo_data['web_code']}"
+                f"MongoDB insert successful for webcode: {mongo_data['web_code']}."
             )
         except KeyError as e:
             logger.error(f"Missing required key for MongoDB insert: {e}")
@@ -206,10 +206,10 @@ class DatabaseHandler:
         if not validate_input_product_id_web_code(
             product_id=product_id, web_code=web_code
         ):
-            logger.error(
-                "Invalid input: Provide either 'product_id' or 'web_code', but not both."
+            logger.error("Invalid input: Provide either 'product_id' or 'web_code'.")
+            raise ValueError(
+                "Invalid input: Provide either 'product_id' or 'web_code'."
             )
-            raise ValueError("Provide either 'product_id' or 'web_code', but not both.")
 
         product = self.product_client.get_product(product_id, web_code)
         if product:
@@ -218,7 +218,7 @@ class DatabaseHandler:
             logger.warning("Product not found.")
         return product
 
-    def store_job(self, job_details: Dict[str, Any]) -> tuple[int, str]:
+    def store_job(self, job_details: Dict[str, Any]) -> Tuple[int, str]:
         """
         Store job details in the database.
 
@@ -228,26 +228,27 @@ class DatabaseHandler:
         Returns:
             Tuple[int, str]: Status and message.
         """
-
-        job_id = job_details["job_id"]
-        webcode = job_details["web_code"]
-        status = job_details["status"]
-        result = job_details["result"]
-        product_id = job_details["product_id"]
-
         try:
             flag = self.job_client.insert_job(
-                job_id, webcode, status, result, product_id
+                job_details["job_id"],
+                job_details["web_code"],
+                job_details["status"],
+                job_details["result"],
+                job_details["product_id"],
             )
             if flag:
-                logger.info(f"Job stored in PostgreSQL with ID: {job_id}.")
-                return 200, "Job data stored successfully."
+                logger.info(
+                    f"Job stored in PostgreSQL with ID: {job_details['job_id']}."
+                )
+                return STATUS_OK, "Job data stored successfully."
             else:
-                logger.error(f"Failed to store job data in database. Job ID: {job_id}")
-                return 500, "Failed to store job data in database."
+                logger.error(
+                    f"Failed to store job data. Job ID: {job_details['job_id']}."
+                )
+                return STATUS_ERROR, "Failed to store job data."
         except Exception as e:
-            logger.error(f"Failed to store job data: {str(e)}")
-            return 500, "Failed to store job data in database."
+            logger.error(f"Failed to store job data: {e}", exc_info=True)
+            return STATUS_ERROR, "Failed to store job data."
 
     def update_job(self, job_id: str, updates: Dict[str, Any]) -> bool:
         """
@@ -269,7 +270,7 @@ class DatabaseHandler:
                 logger.error(f"Failed to update job {job_id}.")
                 return False
         except Exception as e:
-            logger.error(f"Error updating job {job_id}: {str(e)}")
+            logger.error(f"Error updating job {job_id}: {e}", exc_info=True)
             return False
 
     def get_job_by_id(self, job_id: str) -> Optional[Jobs]:

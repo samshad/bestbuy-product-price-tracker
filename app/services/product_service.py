@@ -10,6 +10,11 @@ from app.utils.validate_input import validate_input_product_id_web_code
 
 logger = setup_logging(__name__)
 
+# Constants for HTTP status codes
+STATUS_OK = 200
+STATUS_CREATED = 201
+STATUS_ERROR = 500
+
 
 class ProductService:
     """High-level service for managing product operations."""
@@ -34,7 +39,7 @@ class ProductService:
 
     def scrape_and_process_product(self, webcode: str) -> Dict[str, Any]:
         """
-        Scrape product data from the given Webcode/URL and process it.
+        Scrape product data from the given webcode and process it.
 
         Args:
             webcode (str): Unique webcode identifying the product.
@@ -47,8 +52,9 @@ class ProductService:
         """
         raw_data = self.scraper_service.scrape_product(webcode)
         if not raw_data:
-            logger.error(f"Failed to scrape data for webcode {webcode}.")
-            raise ValueError("Failed to scrape product data. Verify webcode or URL.")
+            logger.error(f"Failed to scrape data for webcode {webcode}.", exc_info=True)
+            raise ValueError("Failed to scrape product data. Verify webcode.")
+        logger.info(f"Scraped data for webcode {webcode}: {raw_data}")
         return self.product_processor.process_product_data(raw_data)
 
     def store_product(
@@ -71,13 +77,13 @@ class ProductService:
                 logger.info(f"Product {product_id} stored successfully.")
                 return product_id, (
                     "Product data added to PostgreSQL and MongoDB.",
-                    201,
+                    STATUS_CREATED,
                 )
-            logger.error(f"Failed to store product. {message}")
+            logger.error(f"Failed to store product: {message}", exc_info=True)
             return None, (message, status_code)
         except Exception as e:
-            logger.error(f"Unexpected error storing product: {e}")
-            return None, ("Internal server error", 500)
+            logger.error(f"Unexpected error storing product: {e}", exc_info=True)
+            return None, ("Internal server error", STATUS_ERROR)
 
     def handle_existing_product(
         self, existing_product: Products, new_product_details: Dict[str, Any]
@@ -102,17 +108,17 @@ class ProductService:
             logger.info(
                 f"Product ID: {existing_product.product_id} updated successfully."
             )
-            return "Product details updated.", 200
+            return "Product details updated.", STATUS_OK
 
         if current_date == stored_date:
             logger.info(f"Product {existing_product.product_id} already updated today.")
-            return "Product already exists for today. No action taken.", 200
+            return "Product already updated today.", STATUS_OK
 
         self.database_handler.update_existing_product(new_product_details)
         logger.info(
             f"Product {new_product_details['product_id']} updated successfully."
         )
-        return "Product details updated.", 200
+        return "Product details updated.", STATUS_OK
 
     def get_all_products(self) -> List[Products]:
         """
@@ -124,7 +130,7 @@ class ProductService:
         try:
             return self.database_handler.get_all_products()
         except Exception as e:
-            logger.error(f"Error fetching all products: {e}")
+            logger.error(f"Error fetching all products: {e}", exc_info=True)
             return []
 
     def get_product_prices(self, web_code: str) -> List[Dict[str, Any]]:
@@ -140,7 +146,9 @@ class ProductService:
         try:
             return self.database_handler.get_product_prices(web_code)
         except Exception as e:
-            logger.error(f"Error fetching prices for webcode {web_code}: {e}")
+            logger.error(
+                f"Error fetching prices for webcode {web_code}: {e}", exc_info=True
+            )
             return []
 
     def get_product(
@@ -163,7 +171,8 @@ class ProductService:
             product_id=product_id, web_code=web_code
         ):
             logger.error(
-                "Invalid input: Provide either 'product_id' or 'web_code', not both."
+                "Invalid input: Provide either 'product_id' or 'web_code'. But not both!",
+                exc_info=True,
             )
             return None
 
@@ -173,6 +182,7 @@ class ProductService:
             )
         except Exception as e:
             logger.error(
-                f"Error fetching product by ID {product_id} or web code {web_code}: {e}"
+                f"Error fetching product by ID {product_id} or web code {web_code}: {e}",
+                exc_info=True,
             )
             return None

@@ -63,11 +63,11 @@ def create_app() -> Flask:
         )
         logger.info("Services initialized successfully.")
     except Exception as e:
-        logger.error(f"Error initializing services: {str(e)}")
+        logger.error(f"Error initializing services: {str(e)}", exc_info=True)
         raise
 
     # Register routes
-    register_routes(app, job_service, product_service, database_handler)
+    register_routes(app, job_service, product_service)
 
     return app
 
