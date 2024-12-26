@@ -1,22 +1,18 @@
-import os
-from typing import List, Optional, Any, Dict
+from typing import Optional, Any, Dict
 
 from sqlalchemy import create_engine, Column, String, DateTime, Integer
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import sessionmaker, declarative_base
-from dotenv import load_dotenv
 
-from app.utils.my_logger import setup_logging
+from app.utils.config import Config
+from app.utils.logging_utils import setup_logging
 from app.utils.datetime_handler import get_current_datetime
-
-# Load environment variables
-load_dotenv()
 
 # Initialize logger
 logger = setup_logging(__name__)
 
 # Database configuration
-POSTGRES_URI = os.getenv("POSTGRES_URI")
+POSTGRES_URI = Config.POSTGRES_URI
 if not POSTGRES_URI:
     logger.critical("POSTGRES_URI is not set in the environment variables.")
     raise ValueError("POSTGRES_URI must be set as an environment variable.")
@@ -85,7 +81,8 @@ class JobsCRUD:
     def to_dict(self):
         return {"engine": self.engine, "Session": self.Session}
 
-    def _validate_parameters(self, parameters: Dict[str, Any]) -> bool:
+    @staticmethod
+    def _validate_parameters(parameters: Dict[str, Any]) -> bool:
         """
         Validate parameters to ensure they meet basic constraints.
 
@@ -144,12 +141,12 @@ class JobsCRUD:
             logger.error(f"Error inserting job {job_id}: {str(e)}", exc_info=True)
             return False
 
-    def get_all_jobs(self) -> List[Jobs]:
+    def get_all_jobs(self) -> list:
         """
         Retrieve all jobs from the database.
 
         Returns:
-            List[Jobs]: A list of all job records. If no jobs are found, an empty list is returned.
+            list: A list of Jobs objects
         """
         try:
             with self.Session() as session:

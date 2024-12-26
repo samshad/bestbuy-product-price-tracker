@@ -3,7 +3,7 @@ from app.db.db_mongo import MongoDBClient
 from app.db.db_postgres import PostgresDBClient
 from app.utils.config import Config
 from app.utils.datetime_handler import get_current_datetime
-from app.utils.my_logger import setup_logging
+from app.utils.logging_utils import setup_logging
 from app.utils.serialization_utils import serialize_mongo_data
 from app.utils.validate_input import validate_input_product_id_web_code
 

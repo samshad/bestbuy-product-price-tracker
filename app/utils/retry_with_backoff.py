@@ -1,6 +1,6 @@
 from time import sleep
 from typing import Callable, Any
-from app.utils.my_logger import setup_logging
+from app.utils.logging_utils import setup_logging
 
 logger = setup_logging(__name__)
 

@@ -1,13 +1,13 @@
-from app.scrapers.product_details_scraper import ProductDetailsScraper
+from app.scraping.product_details_scraper import ProductDetailsScraper
 from typing import Union
-from app.utils.my_logger import setup_logging
+from app.utils.logging_utils import setup_logging
 
 # Configure logging
 logger = setup_logging(__name__)
 
 
 class ScraperFactory:
-    """Factory class for creating scrapers."""
+    """Factory class for creating scraping."""
 
     @staticmethod
     def create_scraper(webcode: str) -> Union[ProductDetailsScraper, None]:

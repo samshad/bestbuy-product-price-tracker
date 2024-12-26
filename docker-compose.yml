@@ -30,9 +30,6 @@ services:
       - web
       - rabbitmq
       - redis
-#    environment:
-#      - REDIS_HOST=redis
-#      - RABBITMQ_BROKER=amqp://guest:guest@rabbitmq:5672//
 
   rabbitmq:
     image: "rabbitmq:3-management"

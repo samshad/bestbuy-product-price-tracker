@@ -4,7 +4,7 @@ from psycopg2.extras import RealDictCursor
 from psycopg2.errors import DatabaseError, OperationalError
 from dotenv import load_dotenv
 from typing import Optional, List, Dict, Any
-from app.utils.my_logger import setup_logging
+from app.utils.logging_utils import setup_logging
 
 # Load environment variables from .env file
 load_dotenv()

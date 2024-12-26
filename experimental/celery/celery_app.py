@@ -18,6 +18,6 @@ def add_numbers(a, b):
 
 
 # Run the Celery worker with the command:
-# cd '.\r&d\celery\'
+# cd '.\experimental\celery\'
 # celery -A celery_app worker --pool=solo --loglevel=info
 # celery -A celery_app worker --pool=solo --without-heartbeat --without-gossip --without-mingle

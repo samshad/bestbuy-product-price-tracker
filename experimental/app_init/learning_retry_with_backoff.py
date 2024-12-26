@@ -3,7 +3,7 @@ from app.db.products_crud import ProductsCRUD
 from app.services.database_handler import DatabaseHandler
 from app.services.product_processor import ProductProcessor
 from app.services.product_service import ProductService
-from app.services.helpers.scraping_helpers import scrape_product_details
+from app.services.helpers.scraper_helpers import scrape_product_details
 from app.services.scraper_service import ScraperService
 from app.utils.data_cleaner import DataCleaner
 from app.utils.retry_with_backoff import retry_with_backoff

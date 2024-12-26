@@ -1,12 +1,8 @@
-import os
 from typing import Optional, Dict, Any, List
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure, PyMongoError
-from dotenv import load_dotenv
-from app.utils.my_logger import setup_logging
-
-# Load environment variables from .env file
-load_dotenv()
+from app.utils.logging_utils import setup_logging
+from app.utils.config import Config
 
 # Configure logging
 logger = setup_logging(__name__)
@@ -20,9 +16,9 @@ class MongoDBClient:
         Initialize the MongoDBClient with credentials from the .env file.
         """
         try:
-            self.mongo_uri = self._get_env_variable("MONGO_URI")
-            self.db_name = self._get_env_variable("MONGO_DB_NAME")
-            self.collection_name = self._get_env_variable("MONGO_COLLECTION_NAME")
+            self.mongo_uri = Config.MONGO_URI
+            self.db_name = Config.MONGO_DB_NAME
+            self.collection_name = Config.MONGO_COLLECTION_NAME
 
             # Connect to MongoDB
             self.client = MongoClient(
@@ -39,22 +35,6 @@ class MongoDBClient:
         except ValueError as e:
             logger.error(f"Configuration error: {str(e)}")
             raise
-
-    @staticmethod
-    def _get_env_variable(key: str) -> str:
-        """
-        Retrieve an environment variable and raise an error if not found.
-
-        Args:
-            key (str): The environment variable key.
-
-        Returns:
-            str: The value of the environment variable.
-        """
-        value = os.getenv(key)
-        if not value:
-            raise ValueError(f"Missing {key} in environment variables.")
-        return value
 
     def insert_data(self, data: Dict[str, Any]) -> Optional[str]:
         """
@@ -76,7 +56,7 @@ class MongoDBClient:
             logger.error(f"Failed to insert data: {str(e)}", exc_info=True)
             return None
 
-    def get_data(self, query: Dict[str, Any] = {}) -> List[Dict[str, Any]]:
+    def get_data(self, query: Dict[str, Any] = dict) -> List[Dict[str, Any]]:
         """
         Retrieve documents from the MongoDB collection.
 

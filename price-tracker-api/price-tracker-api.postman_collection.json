@@ -30,7 +30,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n        \"web_code\": \"14777258\"\r\n}",
+					"raw": "{\r\n        \"web_code\": \"17699676\"\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -102,11 +102,23 @@
 		},
 		{
 			"name": "Job",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
 			"request": {
 				"method": "GET",
 				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
 				"url": {
-					"raw": "{{baseUrl}}/job?job_id=bdcc7e30-2b3d-4ff5-9ec8-1fdc294ec8fd",
+					"raw": "{{baseUrl}}/job?job_id=c5eb2c65-f53d-4ccc-a14d-943d0f375c5e",
 					"host": [
 						"{{baseUrl}}"
 					],
@@ -116,7 +128,7 @@
 					"query": [
 						{
 							"key": "job_id",
-							"value": "bdcc7e30-2b3d-4ff5-9ec8-1fdc294ec8fd"
+							"value": "c5eb2c65-f53d-4ccc-a14d-943d0f375c5e"
 						}
 					]
 				}

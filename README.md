@@ -1,6 +1,29 @@
 # Bestbuy Product Price Tracker
 
-This project is a web application built with Flask that provides various endpoints to manage and retrieve product data from a PostgreSQL and MongoDB database. It includes functionalities for scraping product details, storing them, and retrieving product and price information.
+This project is a web application built with **Flask** that helps manage and retrieve product data from **PostgreSQL** and **MongoDB** databases. It includes some cool features like scraping product details, storing them, and providing easy access to product and price information through **REST APIs**.
+
+#### Key Features:
+
+1.  **Scraping with Playwright**:
+
+    -   Collect product details using **Playwright** for web scraping.
+    -   Scraping tasks are handled asynchronously using **Celery** to keep things smooth and efficient.
+2.  **Database Integration**:
+
+    -   Store product and price data in both **PostgreSQL** and **MongoDB** for flexible data management.
+    -   Retrieve detailed product info and price history whenever needed.
+3.  **Asynchronous Task Management**:
+
+    -   Uses **Celery** with **RabbitMQ** as the message broker and **Redis** for the result backend to manage scraping tasks in the background.
+4.  **Easy Deployment**:
+
+    -   The app is containerized with **Docker**, so it's super easy to set up and run.
+    -   Comes with a `docker-compose.yml` file for quick and hassle-free deployment.
+5.  **Clean and Modular Design**:
+
+    -   The code is organized to keep database operations, business logic, and API routes separate, making it easy to understand and extend.
+
+This project is built to be **user-friendly** and **scalable**, so you can easily adapt it for tracking and managing product data as your needs grow.
 
 ---
 
@@ -12,6 +35,7 @@ This project is a web application built with Flask that provides various endpoin
 - [Endpoints](#endpoints)
   - [/health](#health)
   - [/scrape](#scrape)
+  - [/job](#job)
   - [/products](#products)
   - [/product-prices](#product-prices)
   - [/product](#product)
@@ -23,15 +47,21 @@ This project is a web application built with Flask that provides various endpoin
 ---
 
 ## Features
-- Scrape product details from Best Buy Canada using web code or URL.
+- Scrape product details from Best Buy Canada using web code.
+- Asynchronous scraping tasks with Playwright and Celery.
 - Store product data in PostgreSQL and MongoDB.
-- Retrieve product prices and details using REST APIs.
+- Retrieve product details and price history through REST APIs.
 - Modular design with clean separation of concerns.
+- Easy deployment with Docker Compose.
+- Scalable and user-friendly for managing product data.
+- Detailed logging for monitoring and debugging.
+- Secure and configurable with environment variables.
+- CORS support for cross-origin requests.
 
 ---
 
 ## Technology Stack
-- **Backend:** Flask, Playwright, BeautifulSoup
+- **Backend:** Flask, Celery, Playwright, BeautifulSoup, RabbitMQ, Redis
 - **Database:** PostgreSQL (neon.tech), MongoDB (Atlas)
 - **Other Tools:** Docker, logging
 
@@ -136,6 +166,29 @@ Ensure you have the following installed:
   "error": "Either 'web_code' or 'url' must be provided, but not both."
 }
 ```
+### `/job`
+**Method:** `GET`
+- Fetches the status of a scraping task by its `job_id`.
+- The `job_id` is generated when a scraping task is initiated.
+- The status can be `Pending`, `In Progress`, `Complete` and `Failed`.
+
+**Query Parameter:**
+- `job_id` (required)
+
+**Response Example:**
+```json
+{
+    "job": {
+        "created_at": "2024-12-25 16:16:09.226295",
+        "job_id": "9f4f144d-741f-4211-a548-7a0b2c20039d",
+        "product_id": "None",
+        "result": "None",
+        "status": "In Progress",
+        "updated_at": "2024-12-25 16:16:10.382065",
+        "webcode": "123456"
+    }
+}
+```
 
 ### `/products`
 **Method:** `GET`
@@ -229,17 +282,19 @@ Ensure you have the following installed:
 ```
 bestbuy-product-price-tracker/
 ├── app/
-│   ├── db/                # Handles CRUD operations for PostgreSQL and MongoDB
-│   ├── scrapers/          # Contains logic for scraping product data
-│   ├── services/          # Implements core business logic and integrates scrapers with databases
-│   ├── utils/             # Utility modules for logging, configuration, and input validation
-│   ├── routes.py          # Defines API routes for interacting with the system
-├── tests/                 # Unit and integration test cases
-├── app.py                 # Main entry point for starting the Flask application
-├── requirements.txt       # Python dependencies
-├── Dockerfile             # Configuration for building the Docker image
-├── docker-compose.yml     # Docker Compose configuration for the application stack
-└── README.md              # Project documentation
+│   ├── db/               # Handles CRUD operations for PostgreSQL and MongoDB
+│   ├── scrapers/         # Contains logic for scraping product data
+│   ├── services/         # Implements core business logic and integrates scrapers with databases
+│   │   ├── helpers/      # Helper functions for scraping and data processing
+│   ├── tasks/            # Defines Celery tasks for asynchronous scraping
+│   ├── utils/            # Utility modules for logging, configuration, and input validation
+│   ├── routes.py         # Defines API routes for interacting with the system
+├── tests/                # Unit and integration test cases
+├── app.py                # Main entry point for starting the Flask application
+├── requirements.txt      # Python dependencies
+├── Dockerfile            # Configuration for building the Docker image
+├── docker-compose.yml    # Docker Compose configuration for the application stack
+└── README.md             # Project documentation
 ```
 
 This structure separates concerns by organizing database operations, business logic, utility functions, and API routes into their respective directories.
@@ -275,6 +330,9 @@ This project is licensed under the MIT License. See the LICENSE file for details
 - [Flask](https://flask.palletsprojects.com/)
 - [Playwright](https://playwright.dev/)
 - [Beautiful Soup](https://www.crummy.com/software/BeautifulSoup/bs4/doc/)
+- [Celery](https://docs.celeryproject.org/)
+- [RabbitMQ](https://www.rabbitmq.com/)
+- [Redis](https://redis.io/)
 - [PostgreSQL (Neon)](https://console.neon.tech/)
 - [MongoDB](https://www.mongodb.com/)
 - [Docker](https://www.docker.com/)
