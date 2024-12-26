@@ -1,26 +1,16 @@
-
 services:
   web:
     build:
       context: .
-      args:
-        EXPOSE_PORT: ${EXPOSE_PORT:-5000} # Default to 5000 if not set
-        HOST: ${HOST:-0.0.0.0}           # Default to 0.0.0.0 if not set
-        PORT: ${PORT:-5000}              # Default to 5000 if not set
     ports:
-      - "${EXPOSE_PORT:-5000}:${EXPOSE_PORT:-5000}" # Default to 5000 if EXPOSE_PORT is not set
+      - "${EXPOSE_PORT}:${EXPOSE_PORT}"  # Bind EXPOSE_PORT from .env
     depends_on:
       - rabbitmq
       - redis
-    environment:
-      - REDIS_HOST=${REDIS_HOST:-redis}     # Default to 'redis' if REDIS_HOST is not set
-      - RABBITMQ_BROKER=${RABBITMQ_BROKER:-amqp://guest:guest@rabbitmq:5672//} # Default to 'amqp://guest:guest@rabbitmq:5672//' if RABBITMQ_BROKER is not set
-      - FLASK_ENV=${FLASK_ENV:-development} # Default to 'development' if FLASK_ENV is not set
-      - TZ=${TIMEZONE:-Canada/Atlantic}     # Default to 'Canada/Atlantic' if TIMEZONE is not set
     env_file:
-      - .env                              # Load environment variables from the .env file
+      - .env  # Load environment variables from the .env file
     volumes:
-      - ./logs:/app/logs
+      - ./logs:/app/logs  # Map logs to host directory
 
   worker:
     build:
@@ -30,20 +20,26 @@ services:
       - web
       - rabbitmq
       - redis
+    env_file:
+      - .env  # Share the same environment variables as the web service
 
   rabbitmq:
     image: "rabbitmq:3-management"
     container_name: rabbitmq_local
     ports:
-      - ${RABBITMQ_PORT:-5672}:5672    # Default RabbitMQ messaging port
-      - ${RABBITMQ_MANAGEMENT_PORT:-15672}:15672  # RabbitMQ Management UI port
+      - "${RABBITMQ_PORT}:5672"    # RabbitMQ messaging port
+      - "${RABBITMQ_MANAGEMENT_PORT}:15672"  # RabbitMQ Management UI port
+    # environment:
+      # Uncomment the following to use secrets in production
+      # RABBITMQ_DEFAULT_USER_FILE: /run/secrets/rabbitmq_user
+      # RABBITMQ_DEFAULT_PASS_FILE: /run/secrets/rabbitmq_pass
 
   redis:
     image: redis:latest
     container_name: redis_local
     ports:
-      - ${REDIS_PORT:-6379}:6379  # Map Redis port 6379 to localhost
-    command: [ "redis-server", "--appendonly", "yes" ]  # Enable persistence
+      - "${REDIS_PORT}:6379"  # Map Redis port to localhost
+    command: ["redis-server", "--appendonly", "yes"]  # Enable persistence
 
   redis-commander:
     image: rediscommander/redis-commander:latest
@@ -53,10 +49,17 @@ services:
     depends_on:
       - redis
     ports:
-      - ${REDIS_COMMANDER_PORT:-8081}:8081  # Map Redis Commander port 8081 to localhost
+      - "${REDIS_COMMANDER_PORT}:8081"  # Map Redis Commander port
     environment:
       - REDIS_HOSTS=local:redis:6379  # Connect to Redis container
 
 volumes:
   logs:
     driver: local  # Use local driver for named volume
+
+# Uncomment to use secrets in production
+# secrets:
+#   rabbitmq_user:
+#     file: ./secrets/rabbitmq_user
+#   rabbitmq_pass:
+#     file: ./secrets/rabbitmq_pass
