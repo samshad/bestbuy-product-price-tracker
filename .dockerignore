@@ -167,6 +167,8 @@ dummy_tester/
 tests/
 experimental/
 price-tracker-api/
+mongodata/
+pgdata/
 
 .gitignore
 LICENSE
