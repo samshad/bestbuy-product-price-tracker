@@ -12,15 +12,21 @@ class Config:
     TABLE_NAME = "products"
     ALLOWED_ORIGINS = ["*"]
 
+    DEPLOYMENT_ENV = os.getenv("DEPLOYMENT_ENV")
+
     # MongoDB Configuration
     MONGO_USERNAME = os.getenv("MONGO_USERNAME")
     MONGO_PASSWORD = os.getenv("MONGO_PASSWORD")
     MONGO_DB_NAME = os.getenv("MONGO_DB_NAME")
     MONGO_COLLECTION_NAME = os.getenv("MONGO_COLLECTION_NAME")
-    MONGO_URI = os.getenv("MONGO_URI")
+    MONGO_URI = os.getenv("MONGO_URI_LOCAL")
+    if DEPLOYMENT_ENV == "remote":
+        MONGO_URI = os.getenv("MONGO_URI_REMOTE")
 
-    # PostgreSQL Configuration
-    POSTGRES_URI = os.getenv("POSTGRES_URI")
+    # PostgreSQL Configuration (Local and Remote)
+    POSTGRES_URI = os.getenv("POSTGRES_URI_LOCAL")
+    if DEPLOYMENT_ENV == "remote":
+        POSTGRES_URI = os.getenv("POSTGRES_URI_REMOTE")
 
     # Flask Configuration
     FLASK_ENV = os.getenv("FLASK_ENV", "production")

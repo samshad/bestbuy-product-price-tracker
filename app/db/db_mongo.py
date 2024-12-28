@@ -22,7 +22,7 @@ class MongoDBClient:
 
             # Connect to MongoDB
             self.client = MongoClient(
-                self.mongo_uri, tls=True, tlsAllowInvalidCertificates=True
+                self.mongo_uri
             )
             self.db = self.client[self.db_name]
             self.collection = self.db[self.collection_name]

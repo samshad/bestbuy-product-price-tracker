@@ -164,6 +164,8 @@ logs/
 redis_data/
 rabbitmq_data/
 dummy_tester/
+mongodata/
+pgdata/
 
 00.py
 tmp.py

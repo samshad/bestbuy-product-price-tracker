@@ -7,6 +7,8 @@ services:
     depends_on:
       - rabbitmq
       - redis
+      - mongo
+      - postgres
     env_file:
       - .env  # Load environment variables from the .env file
     volumes:
@@ -20,6 +22,8 @@ services:
       - web
       - rabbitmq
       - redis
+      - mongo
+      - postgres
     env_file:
       - .env  # Share the same environment variables as the web service
 
@@ -53,9 +57,39 @@ services:
     environment:
       - REDIS_HOSTS=local:redis:6379  # Connect to Redis container
 
+  mongo: # MongoDB service
+    image: mongo:latest # Use a specific version for better control
+    container_name: mongo_local
+    env_file:
+      - .env # Load environment variables from the .env file
+    ports:
+      - "${MONGO_PORT}:27017" # Expose MongoDB port
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME} # Root user for initial setup
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD} # Root user password
+      MONGO_INITDB_DATABASE: ${MONGO_DB_NAME} # Database to create on startup
+    volumes:
+      - ./mongodata:/data/db # Persist MongoDB data
+
+  postgres:
+    image: postgres:latest # Use a specific version for better control
+    container_name: postgres_local
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USERNAME} # Default Postgres user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD} # Default Postgres password
+      POSTGRES_DB: ${POSTGRES_DB_NAME} # Default Postgres database
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data # Persist Postgres data
+
 volumes:
   logs:
     driver: local  # Use local driver for named volume
+  pgdata:
+    driver: local # Use local driver for named volume
+  mongodata:
+    driver: local # Use local driver for named volume
 
 # Uncomment to use secrets in production
 # secrets:
