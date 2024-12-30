@@ -109,7 +109,7 @@ class DatabaseHandler:
             }
             self.mongo_client.insert_data(mongo_data)
             logger.debug(
-                f"MongoDB insert successful for webcode: {mongo_data['web_code']}."
+                f"MongoDB insert successful for web_code: {mongo_data['web_code']}."
             )
         except KeyError as e:
             logger.error(f"Missing required key for MongoDB insert: {e}")
