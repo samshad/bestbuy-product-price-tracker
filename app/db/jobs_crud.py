@@ -26,7 +26,7 @@ class Jobs(Base):
     __tablename__ = "jobs"
 
     job_id = Column(String, primary_key=True, nullable=False, unique=True)
-    webcode = Column(String, nullable=False)
+    web_code = Column(String, nullable=False)
     status = Column(String, nullable=False)
     result = Column(String, nullable=True)
     product_id = Column(Integer, nullable=True)
@@ -46,7 +46,7 @@ class Jobs(Base):
             str: A string representation of the job record.
         """
         return (
-            f"Jobs(job_id={self.job_id}, webcode={self.webcode}, status={self.status}, "
+            f"Jobs(job_id={self.job_id}, webcode={self.web_code}, status={self.status}, "
             f"result={self.result}, product_id={self.product_id}, created_at={self.created_at}, "
             f"updated_at={self.updated_at})"
         )
@@ -101,7 +101,7 @@ class JobsCRUD:
     def insert_job(
         self,
         job_id: str,
-        webcode: str,
+        web_code: str,
         status: str,
         result: Optional[str] = None,
         product_id: Optional[int] = None,
@@ -111,7 +111,7 @@ class JobsCRUD:
 
         Args:
             job_id (str): Unique identifier for the job.
-            webcode (str): Product webcode associated with the job.
+            web_code (str): Product webcode associated with the job.
             status (str): Status of the job (e.g., Pending, In Progress, Success, Failed).
             result (Optional[str]): Job result or error message.
             product_id (Optional[int]): ID of the product associated with the job.
@@ -120,7 +120,7 @@ class JobsCRUD:
             bool: True if the job was inserted successfully, False otherwise.
         """
 
-        parameters = {"job_id": job_id, "webcode": webcode, "status": status}
+        parameters = {"job_id": job_id, "web_code": web_code, "status": status}
         if not self._validate_parameters(parameters):
             return False
 
@@ -129,7 +129,7 @@ class JobsCRUD:
                 with session.begin():
                     job = Jobs(
                         job_id=job_id,
-                        webcode=webcode,
+                        web_code=web_code,
                         status=status,
                         result=result,
                         product_id=product_id,
